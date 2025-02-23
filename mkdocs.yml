@@ -1,0 +1,7 @@
+site_name: Term-800 Documentation
+theme:
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - python
+    - bash

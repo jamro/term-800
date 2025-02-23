@@ -1,0 +1,35 @@
+[project]
+name = "term-800"
+version = "0.1.0"
+description = "AI Based Sys Admin Assistant"
+authors = [
+    {name = "Krzysztof Jamroz",email = "kjamroz83@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "openai (>=1.64.0,<2.0.0)",
+    "rich (>=13.9.4,<14.0.0)",
+    "argparse (>=1.4.0,<2.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)"
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-cov = "^6.0.0"
+black = "^25.1.0"
+ruff = "^0.9.7"
+mypy = "^1.15.0"
+pip-tools = "^7.4.1"
+safety = "^3.3.0"
+debugpy = "^1.8.12"
+pyinstrument = "^5.0.1"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
