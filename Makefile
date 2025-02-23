@@ -2,10 +2,10 @@ install:
 	poetry install --no-root
 
 run:
-	poetry run python src/main.py
+	poetry run python -m src.main
 
 test:
-	pytest --cov=src --cov-report=term-missing
+	poetry run pytest --cov=src --cov-report=term-missing
 
 check: 
 	@echo "\n=== Autofomatting (black) ====================" 
@@ -17,8 +17,11 @@ check:
 	@echo "=================================================="
 
 	@echo "\n\n=== Type checking (mypy) ====================="
-	poetry run mypy src/
+	PYTHONPATH=src poetry run mypy src/
 	@echo "==================================================\n"
 
 doc:
 	poetry run mkdocs serve   
+
+
+all: check test run

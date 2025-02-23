@@ -1,32 +1,15 @@
 import argparse
-from openai import OpenAI
 import os
 from rich.console import Console
 from dotenv import load_dotenv
+from src.Conversation import Conversation
+from src.TokenPricing import TokenPricing
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Rich console
 console = Console()
-
-
-def ask_openai(prompt):
-    """Call OpenAI API with a given prompt."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        console.print(
-            "[bold red]Error:[/bold red] OPENAI_API_KEY not set in .env file",
-            style="bold red",
-        )
-        return None
-
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content
 
 
 def main():
@@ -37,15 +20,37 @@ def main():
         "--prompt",
         type=str,
         help="The prompt to send to OpenAI",
-        default="Hello, how are you?",
+        default="Hello, how do you feel today?",
     )
     args = parser.parse_args()
 
-    console.print(f"[bold cyan]Sending prompt to OpenAI:[/bold cyan] {args.prompt}")
-    result = ask_openai(args.prompt)
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        console.print(
+            "[bold red]Error:[/bold red] OPENAI_API_KEY not set in .env file",
+            style="bold red",
+        )
+        return None
 
-    if result:
-        console.print("[bold green]Response:[/bold green]", result)
+    def get_feeling():
+        console.print("[dim]Reflecting on my feelings...[/dim]")
+        return "Assistant feels focused!"
+
+    tokenPricing = TokenPricing()
+
+    conversation = Conversation(
+        api_key, system_message="You are assistant with feelings"
+    )
+    conversation.add_function(
+        "get_feeling", "Get the feeling of assistant", logic=get_feeling
+    )
+
+    console.print(f"[bold cyan]Sending prompt to OpenAI:[/bold cyan] {args.prompt}")
+    console.print(conversation.ask(args.prompt))
+    console.print("[bold cyan]Sending prompt to OpenAI:[/bold cyan] Say that in Polish")
+    console.print(conversation.ask("Say that in Polish"))
+    cost = tokenPricing.get_total_cost(conversation.token_stats)
+    console.print(f"[bold red]Total cost: ${cost:.5f} [/bold red]")
 
 
 if __name__ == "__main__":

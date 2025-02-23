@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "name": "Python: poetry run pytest",
+          "type": "python",
+          "request": "launch",
+          "program": "${workspaceFolder}/tests",
+          "args": [
+              "-m",
+              "pytest",
+              "--disable-warnings"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      }
+  ]
+}
