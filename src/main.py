@@ -2,8 +2,8 @@ import argparse
 import os
 from rich.console import Console
 from dotenv import load_dotenv
-from src.Conversation import Conversation
-from src.TokenPricing import TokenPricing
+from src.ai.Conversation import Conversation
+from src.ai.TokenPricing import TokenPricing
 
 # Load environment variables
 load_dotenv()

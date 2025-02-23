@@ -1,4 +1,4 @@
-from src.TokenPricing import TokenPricing
+from src.ai.TokenPricing import TokenPricing
 
 
 def test_get_model_pricing_no_model():

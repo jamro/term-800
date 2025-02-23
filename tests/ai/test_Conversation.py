@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from src.Conversation import Conversation
+from src.ai.Conversation import Conversation
 import pytest
 import json
 
@@ -75,7 +75,7 @@ def test_add_function():
 
 
 def test_get_models():
-    with patch("src.Conversation.openai.OpenAI") as mock_openai:
+    with patch("src.ai.Conversation.openai.OpenAI") as mock_openai:
         mock_openai.return_value.models.list.return_value.data = [
             MagicMock(id="model-1"),
             MagicMock(id="model-2"),
@@ -85,7 +85,7 @@ def test_get_models():
 
 
 def test_ask(mock_openai_chat_stream):
-    with patch("src.Conversation.openai.OpenAI") as mock_openai:
+    with patch("src.ai.Conversation.openai.OpenAI") as mock_openai:
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream
@@ -95,7 +95,7 @@ def test_ask(mock_openai_chat_stream):
 
 
 def test_ask_recursion_limit(mock_openai_chat_stream_with_function):
-    with patch("src.Conversation.openai.OpenAI") as mock_openai:
+    with patch("src.ai.Conversation.openai.OpenAI") as mock_openai:
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream_with_function
@@ -140,7 +140,7 @@ def test_recursion_limit():
 
 
 def test_on_data_callback(mock_openai_chat_stream):
-    with patch("src.Conversation.openai.OpenAI") as mock_openai:
+    with patch("src.ai.Conversation.openai.OpenAI") as mock_openai:
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream
