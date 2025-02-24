@@ -177,5 +177,5 @@ def test_Conversation_stats(mock_openai_chat_stream):
             "gpt-4o": {
                 "input_tokens": 50,
                 "output_tokens": 0,
-            }
+            },
         }

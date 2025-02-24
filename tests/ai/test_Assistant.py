@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from src.ai.Assistant import Assistant
 from src.shell.RemoteShell import RemoteShell
 
+
 @pytest.fixture
 def mock_openai_chat_stream_with_function(*args, **kwargs):
     func_chunk = MagicMock(arguments='{"command": "whoami"}')
@@ -23,10 +24,11 @@ def mock_openai_chat_stream_with_function(*args, **kwargs):
 
     return generator()
 
+
 def test_Assistant_run_command(mock_openai_chat_stream_with_function):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
-        patch("src.ai.Conversation.openai.OpenAI") as mock_openai
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
     ):
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
@@ -46,7 +48,7 @@ def test_Assistant_run_command(mock_openai_chat_stream_with_function):
 def test_Assistant_run_command_hooks(mock_openai_chat_stream_with_function):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
-        patch("src.ai.Conversation.openai.OpenAI") as mock_openai
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
     ):
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
@@ -67,7 +69,7 @@ def test_Assistant_run_command_hooks(mock_openai_chat_stream_with_function):
 def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
-        patch("src.ai.Conversation.openai.OpenAI") as mock_openai
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
     ):
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
@@ -83,4 +85,3 @@ def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
 
         assert cost > 0
         assert cost < 0.1
-    
