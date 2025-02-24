@@ -155,3 +155,27 @@ def test_on_data_callback(mock_openai_chat_stream):
         conversation = Conversation("api_key")
         conversation.ask("Hello", on_data_callback=on_data_callback)
         assert log == "Hello, how are you?"
+
+
+def test_Conversation_stats(mock_openai_chat_stream):
+    with patch("src.ai.Conversation.openai.OpenAI") as mock_openai:
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.return_value = (
+            mock_openai_chat_stream
+        )
+        conversation = Conversation("api_key")
+        conversation.ask("Hello, how are you?", model_name="gpt-4o-mini")
+        conversation.ask("Madagascar", model_name="gpt-4o")
+
+        print(conversation.token_stats)
+
+        assert conversation.token_stats == {
+            "gpt-4o-mini": {
+                "input_tokens": 18,
+                "output_tokens": 6,
+            },
+            "gpt-4o": {
+                "input_tokens": 50,
+                "output_tokens": 0,
+            }
+        }

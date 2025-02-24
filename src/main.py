@@ -2,28 +2,19 @@ import argparse
 import os
 from rich.console import Console
 from dotenv import load_dotenv
-from src.ai.Conversation import Conversation
-from src.ai.TokenPricing import TokenPricing
+from src.shell.RemoteShell import RemoteShell
+from src.ai.Assistant import Assistant
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Rich console
-console = Console()
+console = Console(highlight=False)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Chat with OpenAI using argparse and Rich."
-    )
-    parser.add_argument(
-        "--prompt",
-        type=str,
-        help="The prompt to send to OpenAI",
-        default="Hello, how do you feel today?",
-    )
-    args = parser.parse_args()
+def main(host="", user=""):
 
+    # Check if everything is set up properly
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         console.print(
@@ -31,27 +22,52 @@ def main():
             style="bold red",
         )
         return None
+    if not user:
+        console.print(
+            "[bold red]Error:[/bold red] --user argumet not set in arguments. Run with --help for more info",
+            style="bold red",
+        )
+        return None
+    if not host:
+        console.print(
+            "[bold red]Error:[/bold red] --host argument not set. Run with --help for more info",
+            style="bold yellow",
+        )
+        return None
 
-    def get_feeling():
-        console.print("[dim]Reflecting on my feelings...[/dim]")
-        return "Assistant feels focused!"
+    # Connect to the host
+    console.print(f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim]")
+    shell = RemoteShell(host, user)
+    if not shell.test_connection():
+        console.print(
+            "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
+        )
+        return None
 
-    tokenPricing = TokenPricing()
+    assistant = Assistant(shell, api_key)
+    assistant.on_exec_prompt = lambda input: console.print(f"> [dim]{input}[/dim]")
+    assistant.on_exec_response = lambda output: console.print(f"[dim]{output}[/dim]")
 
-    conversation = Conversation(
-        api_key, system_message="You are assistant with feelings"
-    )
-    conversation.add_function(
-        "get_feeling", "Get the feeling of assistant", logic=get_feeling
-    )
+    prompt = "Is current user a root or can they do sudo operations without password?"
 
-    console.print(f"[bold cyan]Sending prompt to OpenAI:[/bold cyan] {args.prompt}")
-    console.print(conversation.ask(args.prompt))
-    console.print("[bold cyan]Sending prompt to OpenAI:[/bold cyan] Say that in Polish")
-    console.print(conversation.ask("Say that in Polish"))
-    cost = tokenPricing.get_total_cost(conversation.token_stats)
-    console.print(f"[bold red]Total cost: ${cost:.5f} [/bold red]")
+    console.print(f"[bold yellow]{prompt}[/bold yellow]")
+    reply = assistant.ask(prompt)
+    console.print(f"[yellow]{reply}[/yellow]")
+
+    # summarize costs
+    # cost = tokenPricing.get_total_cost(conversation.token_stats)
+    console.print(f"[dim]Total cost: ${assistant.get_total_cost():.5f} [/dim]")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Term-800: AI Powered Sys Admin Assistant"
+    )
+    parser.add_argument(
+        "-x", "--host", type=str, help="The host to connect to", default=""
+    )
+    parser.add_argument(
+        "-u", "--user", type=str, help="The user to connect as", default=""
+    )
+    args = parser.parse_args()
+    main(**vars(args))

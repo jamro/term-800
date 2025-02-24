@@ -18,5 +18,5 @@ OPENAI_API_KEY=...
 Install dependencies and run the project
 ```bash
 make install
-make run
+make run host="skynet.local" user="lab"
 ```

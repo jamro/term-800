@@ -2,7 +2,7 @@ install:
 	poetry install --no-root
 
 run:
-	poetry run python -m src.main
+	poetry run python -m src.main --host $(host) --user $(user)
 
 test:
 	poetry run pytest --cov=src --cov-report=term-missing
