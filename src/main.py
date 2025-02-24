@@ -4,6 +4,7 @@ from rich.console import Console
 from dotenv import load_dotenv
 from src.shell.RemoteShell import RemoteShell
 from src.ai.Assistant import Assistant
+from src.ai.Chat import Chat
 
 # Load environment variables
 load_dotenv()
@@ -45,18 +46,8 @@ def main(host="", user=""):
         return None
 
     assistant = Assistant(shell, api_key)
-    assistant.on_exec_prompt = lambda input: console.print(f"> [dim]{input}[/dim]")
-    assistant.on_exec_response = lambda output: console.print(f"[dim]{output}[/dim]")
-
-    prompt = "Is current user a root or can they do sudo operations without password?"
-
-    console.print(f"[bold yellow]{prompt}[/bold yellow]")
-    reply = assistant.ask(prompt)
-    console.print(f"[yellow]{reply}[/yellow]")
-
-    # summarize costs
-    # cost = tokenPricing.get_total_cost(conversation.token_stats)
-    console.print(f"[dim]Total cost: ${assistant.get_total_cost():.5f} [/dim]")
+    chat = Chat(console, shell, assistant)
+    chat.run()
 
 
 if __name__ == "__main__":
