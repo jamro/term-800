@@ -51,9 +51,8 @@ def test_exec_ok():
         mock_conn.return_value.run.return_value.exited = 0
         result = rs.exec("echo Hello")
         mock_conn.assert_called_once_with(host="localhost", user="user")
-        mock_conn.return_value.run.assert_called_once_with(
-            "echo Hello", hide=True, warn=True
-        )
+        mock_conn.return_value.run.assert_called_once()
+        assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello"
 
 
@@ -68,7 +67,6 @@ def test_exec_fail():
         mock_conn.return_value.run.return_value.exited = 1
         result = rs.exec("echo Hello")
         mock_conn.assert_called_once_with(host="localhost", user="user")
-        mock_conn.return_value.run.assert_called_once_with(
-            "echo Hello", hide=True, warn=True
-        )
+        mock_conn.return_value.run.assert_called_once()
+        assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello\nError: Error\nExit Code: 1"

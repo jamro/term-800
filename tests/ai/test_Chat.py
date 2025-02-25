@@ -2,6 +2,7 @@ import pytest
 from src.ai.Chat import Chat
 from src.ai.Assistant import Assistant
 from src.shell.RemoteShell import RemoteShell
+from src.shell.LogStream import LogStream
 from unittest.mock import MagicMock, patch
 
 
@@ -40,29 +41,86 @@ def test_Chat_ask(chat, assistant_mock):
 
 
 def test_Chat_print_exec_prompt(chat, console_mock, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]):
+    with patch("src.ai.Chat.Prompt.ask", side_effect=["whoami 23r4891", "/bye"]):
         chat.run()
-        assistant_mock.on_exec_prompt("whoami")
 
         console_args = [call[0][0] for call in console_mock.print.call_args_list]
         assert any(
-            "whoami" in arg for arg in console_args
+            "whoami 23r4891" in arg for arg in console_args
         ), f"No call contained 'whoami'. Calls: {console_args}"
 
 
-def test_Chat_print_exec_response(chat, console_mock, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]):
+def test_Chat_print_exec_response(chat, assistant_mock):
+    with (
+        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.ai.Chat.Live") as live_mock,
+    ):
+        log_stream_mock = MagicMock(spec=LogStream)
+        log_stream_mock.command = "whoami"
         chat.run()
-        assistant_mock.on_exec_response("root-user")
+        assistant_mock.on_log_stream.call_args[0][0](log_stream_mock)
+        log_stream_mock.on_log.call_args[0][0](
+            "root-user\nmulti-line\noutput\nand more"
+        )
+        log_stream_mock.on_complete.call_args[0][0]()
 
-        console_args = [call[0][0] for call in console_mock.print.call_args_list]
+        live_instance = live_mock.return_value
+
+        live_instance.start.assert_called()
+        live_instance.stop.assert_called()
+
+        console_args = [
+            call[0][0].renderable for call in live_instance.update.call_args_list
+        ]
         assert any(
             "root-user" in arg for arg in console_args
         ), f"No call contained 'root-user'. Calls: {console_args}"
 
-        assistant_mock.on_exec_response("root-user\nmulti-line\noutput\nand more")
 
-        console_args = [call[0][0] for call in console_mock.print.call_args_list]
-        assert any(
-            "and more" not in arg for arg in console_args
-        ), f"A call contained 'and more'. Calls: {console_args}"
+def test_Chat_print_exec_response_skip_duplicates(chat, assistant_mock):
+    with (
+        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.ai.Chat.Live") as live_mock,
+    ):
+        log_stream_mock = MagicMock(spec=LogStream)
+        log_stream_mock.command = "whoami"
+        chat.run()
+        assistant_mock.on_log_stream.call_args[0][0](log_stream_mock)
+        log_stream_mock.on_log.call_args[0][0]("line1")
+        log_stream_mock.on_log.call_args[0][0]("line1")
+        log_stream_mock.on_log.call_args[0][0]("line2")
+        log_stream_mock.on_log.call_args[0][0]("line1")
+        log_stream_mock.on_complete.call_args[0][0]()
+
+        live_instance = live_mock.return_value
+
+        assert (
+            live_instance.update.call_args_list[-1][0][0].renderable
+            == "[dim]line1\nline2\nline1[/dim]"
+        )
+
+
+def test_Chat_print_exec_response_keep_short(chat, assistant_mock):
+    with (
+        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.ai.Chat.Live") as live_mock,
+    ):
+        log_stream_mock = MagicMock(spec=LogStream)
+        log_stream_mock.command = "whoami"
+        chat.run()
+        assistant_mock.on_log_stream.call_args[0][0](log_stream_mock)
+        log_stream_mock.on_log.call_args[0][0]("line1")
+        log_stream_mock.on_log.call_args[0][0]("line1")
+        log_stream_mock.on_log.call_args[0][0]("line2")
+        log_stream_mock.on_log.call_args[0][0]("line3")
+        log_stream_mock.on_log.call_args[0][0]("line4")
+        log_stream_mock.on_log.call_args[0][0]("line5")
+        log_stream_mock.on_log.call_args[0][0]("line6")
+        log_stream_mock.on_complete.call_args[0][0]()
+
+        live_instance = live_mock.return_value
+
+        assert (
+            live_instance.update.call_args_list[-1][0][0].renderable
+            == "[dim]...\nline2\nline3\nline4\nline5\nline6[/dim]"
+        )

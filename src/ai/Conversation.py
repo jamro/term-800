@@ -45,14 +45,12 @@ class Conversation:
         query,
         model_name=None,
         on_data_callback=None,
-        recurence_limit=10,
+        recurence_limit=25,
     ):
         model_name = model_name or self.model_name
 
         if recurence_limit <= 0:
-            raise ValueError(
-                "Recursion limit reached. Please check for infinite loops in the function"
-            )
+            return "Recurence limit reached"
 
         client = openai.OpenAI(api_key=self.api_key)
 

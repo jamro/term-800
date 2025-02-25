@@ -1,4 +1,5 @@
 from fabric import Connection
+from src.shell.LogStream import LogStream
 
 
 class RemoteShell:
@@ -15,8 +16,19 @@ class RemoteShell:
             return False
         return True
 
-    def exec(self, command):
-        result = self.conn.run(command, hide=True, warn=True)
+    def exec(self, command, log_stream=None):
+        log_stream = log_stream or LogStream(command)
+        log_stream.command = command
+
+        result = self.conn.run(
+            command,
+            hide=True,
+            warn=True,
+            pty=True,
+            out_stream=log_stream,
+            err_stream=log_stream,
+        )
+        log_stream.done()
         full_output = ""
         if result.stdout:
             full_output += result.stdout

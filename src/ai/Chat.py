@@ -1,5 +1,8 @@
 from rich.prompt import Prompt
 from rich.text import Text
+from rich.live import Live
+from rich.panel import Panel
+import re
 
 
 class Chat:
@@ -8,24 +11,34 @@ class Chat:
         self.shell = shell
         self.assistant = assistant
 
-        def print_output(output):
-            nonlocal self
-            lines = output.split("\n")
-            if len(lines) > 3:
-                output = "\n".join(lines[:3]) + "\n..."
-            else:
-                output = "\n".join(lines)
-            output = output[:100] + "..." if len(output) > 100 else output
+        self.assistant.on_log_stream(self._handle_log_stream)
 
-            self.console.print(f"[dim]{output}[/dim]")
+    def _handle_log_stream(self, log_stream):
+        live = Live(Panel("...", title=log_stream.command), refresh_per_second=4)
+        live.start()
+        panel_height = 5
+        log_lines = []
 
-        self.assistant.on_exec_prompt = lambda input: self.console.print(
-            f"> [dim bold]{input}[/dim bold]"
-        )
-        self.assistant.on_exec_response = print_output
+        def update_panel(line):
+            nonlocal log_lines, log_stream
+
+            ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+            line = ANSI_ESCAPE_RE.sub("", line)
+            line = line.strip()
+            if len(log_lines) > 0 and log_lines[-1] == line:
+                return
+
+            log_lines.append(line)
+            log = "\n".join(log_lines[-panel_height:])
+            if len(log_lines) > panel_height:
+                log = f"...\n{log}"
+            log = f"[dim]{log}[/dim]"
+            live.update(Panel(f"{log or '...'}", title=log_stream.command))
+
+        log_stream.on_log(update_panel)
+        log_stream.on_complete(lambda: live.stop())
 
     def run(self):
-
         self.console.print("[bold yellow]Term-800 Online.[/bold yellow]")
         self.console.print("[yellow]AI-driven system administrator activated.[/yellow]")
 
