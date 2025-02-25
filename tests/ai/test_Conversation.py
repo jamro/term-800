@@ -135,8 +135,9 @@ def test_set_system_message():
 
 def test_recursion_limit():
     conversation = Conversation("api_key")
-    with pytest.raises(ValueError):
-        conversation.ask("Hello", recurence_limit=0)
+    reply = conversation.ask("Hello", recurence_limit=0)
+
+    assert reply == "Recurence limit reached"
 
 
 def test_on_data_callback(mock_openai_chat_stream):

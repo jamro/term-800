@@ -70,8 +70,14 @@ class Chat:
                 return
 
             self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
-            reply = self.assistant.ask(prompt)
-            self.console.print(f"[yellow]{reply}[/yellow]")
+            self.assistant.ask(
+                prompt,
+                on_data_callback=lambda data: self.console.print(
+                    f"[yellow]{data}[/yellow]", end=""
+                ),
+            )
+
+            self.console.print()
 
             self.console.print(
                 f"[dim]Total cost: ${self.assistant.get_total_cost():.5f} [/dim]\n",

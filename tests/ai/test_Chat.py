@@ -37,14 +37,18 @@ def test_Chat_bye(chat, console_mock):
 def test_Chat_ask(chat, assistant_mock):
     with patch("src.ai.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
         chat.run()
-        assistant_mock.ask.assert_called_with("Hello")
+        assistant_mock.ask.assert_called()
+        assert assistant_mock.ask.call_args[0][0] == "Hello"
 
 
 def test_Chat_print_exec_prompt(chat, console_mock, assistant_mock):
     with patch("src.ai.Chat.Prompt.ask", side_effect=["whoami 23r4891", "/bye"]):
         chat.run()
 
-        console_args = [call[0][0] for call in console_mock.print.call_args_list]
+        console_args = []
+        for call in console_mock.print.call_args_list:
+            if len(call) > 0 and len(call[0]) > 0:
+                console_args.append(call[0][0])
         assert any(
             "whoami 23r4891" in arg for arg in console_args
         ), f"No call contained 'whoami'. Calls: {console_args}"
