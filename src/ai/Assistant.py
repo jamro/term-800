@@ -32,6 +32,32 @@ class Assistant(Conversation):
             log_stream.command = command
             self.emitter.emit("log_stream", log_stream)
             output = shell.exec(command, log_stream=log_stream)
+
+            if len(output) > 5000:
+                summary_convo = Conversation(self.api_key, model_name=self.model_name)
+                self.emitter.emit("output_summary_start")
+                output = summary_convo.ask(
+                    f"""
+                  You are an AI assistant summarizing the output of a system administration command. 
+                  The original output may be very long and verbose. Your task is to create a concise and 
+                  structured summary while retaining all critical information.
+                  - Focus on important data points, errors, warnings, and system statuses.
+	                - If the output contains structured information (tables, logs, lists), keep only the most relevant rows or entries.
+                  - Remove unnecessary repetitions and redundant messages.
+                  - Use bullet points or short, clear sentences.
+                  - Prefer numbers over text when summarizing numerical data (e.g., CPU usage: 75% instead of “high”).
+                  - Avoid unnecessary filler words.
+                  - If errors or warnings are present, list them separately and highlight their severity.
+                  - Include potential causes or next steps if mentioned in the output.
+                  - State “No issues detected” instead of a verbose confirmation of normal operation.
+                                            
+                  COMMAND: {command}
+                  OUPUT:
+                  {output}
+                """
+                )
+                self.emitter.emit("output_summary_end")
+
             return f"{command}\n{output}"
 
         self.add_function(
@@ -52,6 +78,12 @@ class Assistant(Conversation):
 
     def on_log_stream(self, handler):
         self.emitter.on("log_stream", handler)
+
+    def on_output_summary_start(self, handler):
+        self.emitter.on("output_summary_start", handler)
+
+    def on_output_summary_end(self, handler):
+        self.emitter.on("output_summary_end", handler)
 
     def get_total_cost(self):
         return self.tokenPricing.get_total_cost(self.token_stats)

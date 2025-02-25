@@ -87,3 +87,33 @@ def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
 
         assert cost > 0
         assert cost < 0.1
+
+
+def test_Assistant_summarise_long_stdout(mock_openai_chat_stream_with_function):
+    with (
+        patch("src.ai.Assistant.Conversation") as conversation_mock,
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
+        patch("src.ai.Assistant.Conversation") as conversation_mock,
+    ):
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.return_value = (
+            mock_openai_chat_stream_with_function
+        )
+
+        on_summary_start_mock = MagicMock()
+        on_summary_end_mock = MagicMock()
+
+        remote_shell_mock = MagicMock(spec=RemoteShell)
+        remote_shell_mock.exec.return_value = "a" * 10000
+        conversation_mock.return_value.ask.return_value = "a_summary"
+        assistant = Assistant(remote_shell_mock, "api_key")
+        assistant.on_output_summary_start(on_summary_start_mock)
+        assistant.on_output_summary_end(on_summary_end_mock)
+        assistant.ask("Hello")
+
+        assert remote_shell_mock.exec.call_args[0][0] == "whoami"
+        chat_dump = json.dumps(mock_client_instance.chat.completions.create.call_args)
+        assert "a_summary" in chat_dump
+
+        on_summary_start_mock.assert_called_once()
+        on_summary_end_mock.assert_called_once()

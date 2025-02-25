@@ -12,6 +12,12 @@ class Chat:
         self.assistant = assistant
 
         self.assistant.on_log_stream(self._handle_log_stream)
+        self.assistant.on_output_summary_start(
+            lambda: self.console.print("[dim]Summarizing output...[/dim]")
+        )
+        self.assistant.on_output_summary_end(
+            lambda: self.console.print("[dim]Summary complete.[/dim]")
+        )
 
     def _handle_log_stream(self, log_stream):
         live = Live(Panel("...", title=log_stream.command), refresh_per_second=4)
