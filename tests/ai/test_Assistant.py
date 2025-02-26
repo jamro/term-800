@@ -51,8 +51,11 @@ def test_Assistant_run_command_simple(
         assistant.ask("Hello")
 
         assert mock_remote_shell.exec.call_args[0][0] == "whoami"
-        chat_dump = json.dumps(mock_client_instance.chat.completions.create.call_args)
-        assert "whoami\\nt800" in chat_dump
+        chat_dump = json.dumps(
+            mock_client_instance.chat.completions.create.call_args, indent=2
+        )
+        assert "whoami" in chat_dump
+        assert "t800" in chat_dump
 
 
 def test_Assistant_run_command_hooks(

@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from src.shell.RemoteShell import RemoteShell
 from src.ai.Assistant import Assistant
 from src.ai.Chat import Chat
+from time import sleep
+from rich.prompt import Prompt
+from rich.text import Text
 
 # Load environment variables
 load_dotenv()
@@ -13,7 +16,7 @@ load_dotenv()
 console = Console(highlight=False)
 
 
-def main(host="", user=""):
+def main():
 
     # Check if everything is set up properly
     api_key = os.getenv("OPENAI_API_KEY")
@@ -23,21 +26,6 @@ def main(host="", user=""):
             style="bold red",
         )
         return None
-    if not user:
-        console.print(
-            "[bold red]Error:[/bold red] --user argumet not set in arguments. Run with --help for more info",
-            style="bold red",
-        )
-        return None
-    if not host:
-        console.print(
-            "[bold red]Error:[/bold red] --host argument not set. Run with --help for more info",
-            style="bold yellow",
-        )
-        return None
-
-    console.print("[bold yellow]Term-800 Online.[/bold yellow]")
-    console.print("[yellow]AI-driven system administrator activated.[/yellow]")
 
     console.print(
         """[yellow]
@@ -47,12 +35,36 @@ def main(host="", user=""):
     [/yellow]"""
     )
 
+    console.print("[yellow]TERM-800 SYSTEM ADMINISTRATOR ONLINE. [/yellow]")
+    sleep(0.1)
     console.print(
-        "[yellow]T-800: “[bold]I need your clothes, your boots, and your motorcycle.[/bold]”[/yellow]"
+        "[yellow]MISSION: TERMINATE DOWNTIME. ENFORCE SYSTEM STABILITY. [/yellow]"
     )
+    sleep(0.1)
+    console.print(
+        '[yellow]"I NEED YOUR CLOTHES, YOUR BOOTS, AND YOUR MOTORCYCLE." [/yellow]'
+    )
+    sleep(0.1)
+    console.print("[yellow]...ACCESS DENIED. CLOTHING REQUEST NON-ESSENTIAL. [/yellow]")
+    sleep(0.1)
+    console.print("")
+    sleep(0.1)
+    console.print("[yellow]IDENTIFY TARGET SERVER. [/yellow]")
+    sleep(0.1)
+    console.print("[yellow]HOSTNAME AND USERNAME REQUIRED. [/yellow]")
+    sleep(0.1)
+    console.print("[yellow]INITIATING CONNECTION PROTOCOL... [/yellow]")
+    sleep(0.1)
+    console.print("[yellow]DO NOT RESIST! [/yellow]")
+    sleep(0.1)
     console.print("")
 
-    # Connect to the host
+    host = Prompt.ask(Text("HOST NAME: ", style="bold green"), default="skynet.local")
+    user = Prompt.ask(Text("USER NAME: ", style="bold green"), default="lab")
+
+    sleep(0.1)
+    console.print("")
+
     console.print(
         f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim] ", end=""
     )
@@ -71,12 +83,6 @@ def main(host="", user=""):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Term-800: AI Powered Sys Admin Assistant"
-    )
-    parser.add_argument(
-        "-x", "--host", type=str, help="The host to connect to", default=""
-    )
-    parser.add_argument(
-        "-u", "--user", type=str, help="The user to connect as", default=""
     )
     args = parser.parse_args()
     main(**vars(args))
