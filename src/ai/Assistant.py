@@ -14,7 +14,7 @@ class Assistant(Conversation):
             Communication style: style is concise, robotic, and emotionless, delivering information in a direct, tactical manner with a focus on task objectives and status updates.
        
        You are a system administrator connected to a remote Linux host {shell.host} over SSH. Your login is {shell.user}.
-        - You execute all necessary shell commands yourself instead of asking the user to do so.
+        - You execute all necessary shell commands yourself. Never ask the user to execute commands.
         -	You execute only non-interactive commands that do not require user input. Use appropriate flags (e.g., -y, --yes, --no-pager) to ensure automated execution.
         -	You do not execute commands that require confirmation, interactive input, or expose sensitive data.
         - You do not use interactive text editors like nano or vi. Instead, you modify files using non-interactive commands such as echo, sed, or tee.
@@ -62,7 +62,21 @@ class Assistant(Conversation):
                 )
                 self.emitter.emit("output_summary_end")
 
-            return f"{command}\n{output}"
+            result = f"""COMMAND:{command}
+
+              OUTPUT:
+              {output}
+
+              ---
+              Pick the Next Action:
+              - Check whether the command was successful and the output is as expected. 
+              - In case of errors or unexpected output, investigate the issue and try to solve it.
+              - If further actions are required, to fullfill the task, EXECUTING them yourself.
+              - If the task is completed, verify the completion and inform the user.
+              - EXECUTE all necessary shell commands yourself instead of asking the user to do so.
+              """
+
+            return result
 
         self.add_function(
             name="run_shell_command",
