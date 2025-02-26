@@ -168,15 +168,23 @@ def test_Conversation_stats(mock_openai_chat_stream):
         conversation.ask("Hello, how are you?", model_name="gpt-4o-mini")
         conversation.ask("Madagascar", model_name="gpt-4o")
 
-        print(conversation.token_stats)
+  
 
         assert conversation.token_stats == {
             "gpt-4o-mini": {
-                "input_tokens": 18,
+                "input_tokens": 29,
                 "output_tokens": 6,
             },
             "gpt-4o": {
-                "input_tokens": 50,
+                "input_tokens": 61,
                 "output_tokens": 0,
             },
         }
+
+def test_Conversation_update_sys_msg():
+    conversation = Conversation("api_key", system_message="You are a test assistant 535234")
+    conversation.set_system_message("You are a test assistant 43452")
+    assert conversation.get_system_message() == "You are a test assistant 43452"
+
+    history_dump = json.dumps(conversation.history)
+    assert "You are a test assistant 43452" in history_dump

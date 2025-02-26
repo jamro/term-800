@@ -17,8 +17,17 @@ class Conversation:
         self.history = []
         self.functions = []
         self.token_stats = {}
-        if system_message:
-            self.history.append({"role": "system", "content": system_message})
+        self._system_block = {
+            "role": "system",
+            "content": system_message,
+        }
+        self.history.append(self._system_block)
+
+    def set_system_message(self, message):
+        self._system_block["content"] = message
+
+    def get_system_message(self):
+        return self._system_block["content"]
 
     def add_function(self, name, description, logic, parameters={}):
         self.functions.append(

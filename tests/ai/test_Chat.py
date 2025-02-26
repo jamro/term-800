@@ -122,3 +122,26 @@ def test_Chat_print_exec_response_keep_short(chat, assistant_mock):
             live_instance.update.call_args_list[-1][0][0].renderable
             == "[dim]...\nline2\nline3\nline4\nline5\nline6[/dim]"
         )
+
+def test_Chat_welcome(chat, console_mock):
+    chat.welcome(delay=0)
+    
+    output = "\n".join([call[0][0] for call in console_mock.print.call_args_list])
+    print(output)
+
+    assert "TERM-800 SYSTEM ADMINISTRATOR ONLINE" in output
+
+def test_Chat_connect_ok(chat, console_mock, assistant_mock):
+    with patch("src.ai.Chat.Prompt.ask", side_effect=["host212", "user847"]):
+        chat.connect()
+        assistant_mock.connect.assert_called_with("host212", "user847")
+        console_mock.print.assert_called_with("[yellow]Connected![/yellow]\n")
+
+def test_Chat_connect_fail(chat, console_mock, assistant_mock):
+    with patch("src.ai.Chat.Prompt.ask", side_effect=["host212", "user847"]):
+        assistant_mock.connect.return_value = False
+        chat.connect()
+        console_mock.print.assert_called_with(
+            "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
+        )
+        assistant_mock.connect.assert_called_with("host212", "user847")

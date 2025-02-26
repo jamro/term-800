@@ -4,12 +4,15 @@ from src.shell.LogStream import LogStream
 
 class RemoteShell:
 
-    def __init__(self, host, user):
+    def __init__(self):
+        self.host = None
+        self.user = None
+        self.conn = None
+
+    def connect(self, host, user):
         self.host = host
         self.user = user
         self.conn = Connection(host=host, user=user)
-
-    def test_connection(self):
         try:
             self.conn.open()
         except Exception:
@@ -17,6 +20,8 @@ class RemoteShell:
         return True
 
     def exec(self, command, log_stream=None):
+        if not self.conn:
+            raise Exception("Not connected to a host")
         log_stream = log_stream or LogStream(command)
         log_stream.command = command
 

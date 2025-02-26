@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 from src.shell.RemoteShell import RemoteShell
 from src.ai.Assistant import Assistant
 from src.ai.Chat import Chat
-from time import sleep
-from rich.prompt import Prompt
-from rich.text import Text
 
 # Load environment variables
 load_dotenv()
@@ -27,56 +24,11 @@ def main():
         )
         return None
 
-    console.print(
-        """[yellow]
-░▀█▀░█▀▀░█▀▄░█▄█░░░░░▄▀▄░▄▀▄░▄▀▄
-░░█░░█▀▀░█▀▄░█░█░▄▄▄░▄▀▄░█/█░█/█
-░░▀░░▀▀▀░▀░▀░▀░▀░░░░░░▀░░░▀░░░▀░
-    [/yellow]"""
-    )
-
-    console.print("[yellow]TERM-800 SYSTEM ADMINISTRATOR ONLINE. [/yellow]")
-    sleep(0.1)
-    console.print(
-        "[yellow]MISSION: TERMINATE DOWNTIME. ENFORCE SYSTEM STABILITY. [/yellow]"
-    )
-    sleep(0.1)
-    console.print(
-        '[yellow]"I NEED YOUR CLOTHES, YOUR BOOTS, AND YOUR MOTORCYCLE." [/yellow]'
-    )
-    sleep(0.1)
-    console.print("[yellow]...ACCESS DENIED. CLOTHING REQUEST NON-ESSENTIAL. [/yellow]")
-    sleep(0.1)
-    console.print("")
-    sleep(0.1)
-    console.print("[yellow]IDENTIFY TARGET SERVER. [/yellow]")
-    sleep(0.1)
-    console.print("[yellow]HOSTNAME AND USERNAME REQUIRED. [/yellow]")
-    sleep(0.1)
-    console.print("[yellow]INITIATING CONNECTION PROTOCOL... [/yellow]")
-    sleep(0.1)
-    console.print("[yellow]DO NOT RESIST! [/yellow]")
-    sleep(0.1)
-    console.print("")
-
-    host = Prompt.ask(Text("HOST NAME: ", style="bold green"), default="skynet.local")
-    user = Prompt.ask(Text("USER NAME: ", style="bold green"), default="lab")
-
-    sleep(0.1)
-    console.print("")
-
-    console.print(
-        f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim] ", end=""
-    )
-    shell = RemoteShell(host, user)
-    if not shell.test_connection():
-        console.print(
-            "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
-        )
-        return None
-    console.print("[yellow]Connected![/yellow]\n")
+    shell = RemoteShell()
 
     chat = Chat(console, Assistant(shell, api_key))
+    chat.welcome()
+    chat.connect()
     chat.run()
 
 
