@@ -37,3 +37,17 @@ class RemoteShell:
         if result.failed:
             full_output += f"\nExit Code: {result.exited}"
         return full_output
+
+    def get_host_info(self):
+        info_cmds = [
+            "uname -a",
+            "cat /etc/os-release",
+            "lscpu | grep -E 'Model name|CPU\(s\)'",
+            "groups",
+            'sudo -n true 2>/dev/null && echo "User has sudo privileges" || echo "User lacks sudo privileges"',
+        ]
+        basic_info = ""
+        for cmd in info_cmds:
+            basic_info += f"> {cmd}\n{self.exec(cmd)}\n"
+
+        return basic_info

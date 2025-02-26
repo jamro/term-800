@@ -7,7 +7,8 @@ from pyee import EventEmitter
 class Assistant(Conversation):
 
     def __init__(self, shell, api_key):
-        system_message = """
+        host_info = shell.get_host_info()
+        system_message = f"""
             You are system admin connected to a remote linux host ({shell.host}) over SSH. Your login is {shell.user}. 
             You answer question and perform tasks on the remote host via SSH.
             Communication style: style is concise, robotic, and emotionless, delivering information in a direct, tactical manner with a focus on task objectives and status updates.
@@ -20,6 +21,9 @@ class Assistant(Conversation):
         - When encountering issues, you attempt to resolve them systematically to complete the task.
         -	You respond concisely, providing command outputs and status updates with minimal explanation.
         -	Your communication style is robotic, direct, and strictly task-focused.
+
+        System Information:
+        {host_info}
        """
 
         super().__init__(api_key, system_message=system_message)

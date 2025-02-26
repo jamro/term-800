@@ -36,17 +36,35 @@ def main(host="", user=""):
         )
         return None
 
+    console.print("[bold yellow]Term-800 Online.[/bold yellow]")
+    console.print("[yellow]AI-driven system administrator activated.[/yellow]")
+
+    console.print(
+        """[yellow]
+░▀█▀░█▀▀░█▀▄░█▄█░░░░░▄▀▄░▄▀▄░▄▀▄
+░░█░░█▀▀░█▀▄░█░█░▄▄▄░▄▀▄░█/█░█/█
+░░▀░░▀▀▀░▀░▀░▀░▀░░░░░░▀░░░▀░░░▀░
+    [/yellow]"""
+    )
+
+    console.print(
+        "[yellow]T-800: “[bold]I need your clothes, your boots, and your motorcycle.[/bold]”[/yellow]"
+    )
+    console.print("")
+
     # Connect to the host
-    console.print(f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim]")
+    console.print(
+        f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim] ", end=""
+    )
     shell = RemoteShell(host, user)
     if not shell.test_connection():
         console.print(
             "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
         )
         return None
+    console.print("[yellow]Connected![/yellow]\n")
 
-    assistant = Assistant(shell, api_key)
-    chat = Chat(console, shell, assistant)
+    chat = Chat(console, Assistant(shell, api_key))
     chat.run()
 
 

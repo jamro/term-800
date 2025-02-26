@@ -1,7 +1,6 @@
 import pytest
 from src.ai.Chat import Chat
 from src.ai.Assistant import Assistant
-from src.shell.RemoteShell import RemoteShell
 from src.shell.LogStream import LogStream
 from unittest.mock import MagicMock, patch
 
@@ -14,18 +13,13 @@ def assistant_mock():
 
 
 @pytest.fixture
-def shell_mock():
-    return MagicMock(spec=RemoteShell)
-
-
-@pytest.fixture
 def console_mock():
     return MagicMock()
 
 
 @pytest.fixture
-def chat(console_mock, shell_mock, assistant_mock):
-    return Chat(console_mock, shell_mock, assistant_mock)
+def chat(console_mock, assistant_mock):
+    return Chat(console_mock, assistant_mock)
 
 
 def test_Chat_bye(chat, console_mock):

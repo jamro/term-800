@@ -6,9 +6,8 @@ import re
 
 
 class Chat:
-    def __init__(self, console, shell, assistant):
+    def __init__(self, console, assistant):
         self.console = console
-        self.shell = shell
         self.assistant = assistant
 
         self.assistant.on_log_stream(self._handle_log_stream)
@@ -45,21 +44,6 @@ class Chat:
         log_stream.on_complete(lambda: live.stop())
 
     def run(self):
-        self.console.print("[bold yellow]Term-800 Online.[/bold yellow]")
-        self.console.print("[yellow]AI-driven system administrator activated.[/yellow]")
-
-        self.console.print(
-            """[yellow]
-░▀█▀░█▀▀░█▀▄░█▄█░░░░░▄▀▄░▄▀▄░▄▀▄
-░░█░░█▀▀░█▀▄░█░█░▄▄▄░▄▀▄░█/█░█/█
-░░▀░░▀▀▀░▀░▀░▀░▀░░░░░░▀░░░▀░░░▀░
-        [/yellow]"""
-        )
-
-        self.console.print(
-            "[yellow]T-800: “[bold]I need your clothes, your boots, and your motorcycle.[/bold]”[/yellow]"
-        )
-        self.console.print("")
         self.console.print("[dim]Type /help to see available system functions.[/dim]")
         self.console.print("[dim]Type /bye to terminate my session.[/dim]")
         self.console.print("")

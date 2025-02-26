@@ -25,7 +25,20 @@ def mock_openai_chat_stream_with_function(*args, **kwargs):
     return generator()
 
 
-def test_Assistant_run_command_simple(mock_openai_chat_stream_with_function):
+@pytest.fixture
+def mock_remote_shell():
+    mock = MagicMock(spec=RemoteShell)
+    mock.exec.return_value = "t800"
+    mock.get_host_info.return_value = "host_info"
+    mock.host = "skynet-2323.local"
+    mock.user = "johnconnor"
+
+    return mock
+
+
+def test_Assistant_run_command_simple(
+    mock_openai_chat_stream_with_function, mock_remote_shell
+):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
         patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
@@ -34,18 +47,17 @@ def test_Assistant_run_command_simple(mock_openai_chat_stream_with_function):
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream_with_function
         )
-
-        remote_shell_mock = MagicMock(spec=RemoteShell)
-        remote_shell_mock.exec.return_value = "t800"
-        assistant = Assistant(remote_shell_mock, "api_key")
+        assistant = Assistant(mock_remote_shell, "api_key")
         assistant.ask("Hello")
 
-        assert remote_shell_mock.exec.call_args[0][0] == "whoami"
+        assert mock_remote_shell.exec.call_args[0][0] == "whoami"
         chat_dump = json.dumps(mock_client_instance.chat.completions.create.call_args)
         assert "whoami\\nt800" in chat_dump
 
 
-def test_Assistant_run_command_hooks(mock_openai_chat_stream_with_function):
+def test_Assistant_run_command_hooks(
+    mock_openai_chat_stream_with_function, mock_remote_shell
+):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
         patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
@@ -55,9 +67,7 @@ def test_Assistant_run_command_hooks(mock_openai_chat_stream_with_function):
             mock_openai_chat_stream_with_function
         )
 
-        remote_shell_mock = MagicMock(spec=RemoteShell)
-        remote_shell_mock.exec.return_value = "t800"
-        assistant = Assistant(remote_shell_mock, "api_key")
+        assistant = Assistant(mock_remote_shell, "api_key")
         on_log_stream_mock = MagicMock()
         assistant.on_log_stream(on_log_stream_mock)
         assistant.ask("Hello")
@@ -65,10 +75,12 @@ def test_Assistant_run_command_hooks(mock_openai_chat_stream_with_function):
         log_stream = on_log_stream_mock.call_args_list[0][0][0]
         assert log_stream.command == "whoami"
 
-        remote_shell_mock.exec.assert_called_once_with("whoami", log_stream=log_stream)
+        mock_remote_shell.exec.assert_called_once_with("whoami", log_stream=log_stream)
 
 
-def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
+def test_Assistant_get_total_cost(
+    mock_openai_chat_stream_with_function, mock_remote_shell
+):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
         patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
@@ -78,9 +90,7 @@ def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
             mock_openai_chat_stream_with_function
         )
 
-        remote_shell_mock = MagicMock(spec=RemoteShell)
-        remote_shell_mock.exec.return_value = "t800"
-        assistant = Assistant(remote_shell_mock, "api_key")
+        assistant = Assistant(mock_remote_shell, "api_key")
         assistant.ask("Hello")
 
         cost = assistant.get_total_cost()
@@ -89,7 +99,9 @@ def test_Assistant_get_total_cost(mock_openai_chat_stream_with_function):
         assert cost < 0.1
 
 
-def test_Assistant_summarise_long_stdout(mock_openai_chat_stream_with_function):
+def test_Assistant_summarise_long_stdout(
+    mock_openai_chat_stream_with_function, mock_remote_shell
+):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
         patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
@@ -103,15 +115,14 @@ def test_Assistant_summarise_long_stdout(mock_openai_chat_stream_with_function):
         on_summary_start_mock = MagicMock()
         on_summary_end_mock = MagicMock()
 
-        remote_shell_mock = MagicMock(spec=RemoteShell)
-        remote_shell_mock.exec.return_value = "a" * 10000
+        mock_remote_shell.exec.return_value = "a" * 10000
         conversation_mock.return_value.ask.return_value = "a_summary"
-        assistant = Assistant(remote_shell_mock, "api_key")
+        assistant = Assistant(mock_remote_shell, "api_key")
         assistant.on_output_summary_start(on_summary_start_mock)
         assistant.on_output_summary_end(on_summary_end_mock)
         assistant.ask("Hello")
 
-        assert remote_shell_mock.exec.call_args[0][0] == "whoami"
+        assert mock_remote_shell.exec.call_args[0][0] == "whoami"
         chat_dump = json.dumps(mock_client_instance.chat.completions.create.call_args)
         assert "a_summary" in chat_dump
 
