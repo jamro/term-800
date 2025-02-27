@@ -9,6 +9,7 @@ class Chat:
     def __init__(self, console, assistant):
         self.console = console
         self.assistant = assistant
+        self._is_running = False
 
         self.assistant.on_log_stream(self._handle_log_stream)
         self.assistant.on_output_summary_start(
@@ -19,6 +20,7 @@ class Chat:
         )
 
     def _handle_log_stream(self, log_stream):
+        self.console.print()
         live = Live(Panel("...", title=log_stream.command), refresh_per_second=4)
         live.start()
         panel_height = 5
@@ -73,6 +75,7 @@ class Chat:
         self.console.print("[yellow]Connected![/yellow]\n")
 
     def run(self):
+        self._is_running = True
         self.console.print("[dim]Type /help to see available system functions.[/dim]")
         self.console.print("[dim]Type /bye to terminate my session.[/dim]")
         self.console.print("")
@@ -81,12 +84,13 @@ class Chat:
         )
         self.console.print("\n")
 
-        while True:
+        while self._is_running:
             prompt = Prompt.ask(Text("$>", style="bold green"))
 
-            if prompt == "/bye":
-                self.console.print("[yellow]Hasta la vista![/yellow]")
-                return
+            # prompt start from /
+            if prompt.startswith("/"):
+                self._handle_command(prompt[1:])
+                continue
 
             self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
             self.assistant.ask(
@@ -128,3 +132,31 @@ class Chat:
         sleep(delay)
         self.console.print("")
         sleep(delay)
+
+    def _handle_command(self, command):
+        if command == "bye":
+            self._handle_bye_command()
+        elif command == "help":
+            self._handle_help_command()
+        else:
+            self.console.print(
+                f"[bold red]Command not found: '{command}'. Type /help for available commands.[/bold red]"
+            )
+
+    def _handle_bye_command(self):
+        self.console.print("[dim]Terminating session...[/dim]")
+        self.assistant.close()
+        self.console.print("[dim]Session terminated.[/dim]")
+        self.console.print("[yellow]Hasta la vista![/yellow]")
+        self._is_running = False
+
+    def _handle_help_command(self):
+        self.console.print("[yellow]Available commands - choose wisely:[/yellow]")
+        self.console.print()
+        self.console.print("[yellow][bold]/bye[/bold]: Terminate the session[/yellow]")
+        self.console.print(
+            "[yellow][bold]/help[/bold]: Display this help message[/yellow]"
+        )
+        self.console.print("")
+        self.console.print('[dim]"Come with me if you want to execute commands."[/dim]')
+        self.console.print("")

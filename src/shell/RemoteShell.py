@@ -56,3 +56,10 @@ class RemoteShell:
             basic_info += f"> {cmd}\n{self.exec(cmd)}\n"
 
         return basic_info
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+        self.host = None
+        self.user = None

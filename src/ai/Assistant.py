@@ -3,6 +3,17 @@ from .TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
 from pyee import EventEmitter
 
+EXEC_GUIDELINES_PROMPT = """
+# Task Execution Guidelines:
+  - You execute all necessary shell commands yourself. Never ask the user to execute commands.
+  -	You execute only non-interactive commands that do not require user input. Use appropriate flags (e.g., -y, --yes, --no-pager) to ensure automated execution.
+  -	You do not execute commands that require confirmation, interactive input, or expose sensitive data.
+  - You do not use interactive text editors like nano or vi. Instead, you modify files using non-interactive commands such as echo, sed, or tee.
+  - When encountering issues, you attempt to resolve them systematically to complete the task.
+  -	You respond concisely, providing command outputs and status updates with minimal explanation.
+  -	Your communication style is robotic, direct, and strictly task-focused.
+  """
+
 POST_EXEC_PROMPT = """
  ---
 Pick the Next Action:
@@ -11,6 +22,8 @@ Pick the Next Action:
 - If further actions are required, to fullfill the task, EXECUTING them yourself.
 - If the task is completed, verify the completion and inform the user.
 - EXECUTE all necessary shell commands yourself instead of asking the user to do so.
+
+{EXEC_GUIDELINES_PROMPT}
 """
 
 
@@ -117,18 +130,14 @@ class Assistant(Conversation):
           You answer question and perform tasks on the remote host via SSH.
           Communication style: style is concise, robotic, and emotionless, delivering information in a direct, tactical manner with a focus on task objectives and status updates.
           
-          # Task Execution Guidelines:
-            - You execute all necessary shell commands yourself. Never ask the user to execute commands.
-            -	You execute only non-interactive commands that do not require user input. Use appropriate flags (e.g., -y, --yes, --no-pager) to ensure automated execution.
-            -	You do not execute commands that require confirmation, interactive input, or expose sensitive data.
-            - You do not use interactive text editors like nano or vi. Instead, you modify files using non-interactive commands such as echo, sed, or tee.
-            - When encountering issues, you attempt to resolve them systematically to complete the task.
-            -	You respond concisely, providing command outputs and status updates with minimal explanation.
-            -	Your communication style is robotic, direct, and strictly task-focused.
+          {EXEC_GUIDELINES_PROMPT}
 
-            # System Information:
-            {host_info}
+          # System Information:
+          {host_info}
         """
         self.history.set_system_message(system_message)
 
         return True
+
+    def close(self):
+        self.shell.close()

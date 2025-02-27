@@ -79,3 +79,11 @@ def test_RemoteShell_exec_not_connected():
     with pytest.raises(Exception) as e:
         rs.exec("echo Hello")
     assert str(e.value) == "Not connected to a host"
+
+def test_RemoteShell_close():
+    with patch("src.shell.RemoteShell.Connection") as mock_conn:
+        rs = RemoteShell()
+        rs.connect("localhost", "user")
+        rs.close()
+        mock_conn.return_value.close.assert_called_once()
+        assert rs.conn is None

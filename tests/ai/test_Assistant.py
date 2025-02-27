@@ -152,3 +152,9 @@ def test_Assistant_connect_fail(mock_remote_shell):
         mock_remote_shell.connect.return_value = False
         assistant = Assistant(mock_remote_shell, "api_key")
         assert not assistant.connect("host5", "user3")
+
+def test_Assistant_close(mock_remote_shell):
+    with patch("src.ai.Assistant.Conversation") as conversation_mock:
+        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant.close()
+        mock_remote_shell.close.assert_called_once()

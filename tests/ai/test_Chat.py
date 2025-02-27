@@ -25,8 +25,22 @@ def chat(console_mock, assistant_mock):
 def test_Chat_bye(chat, console_mock):
     with patch("src.ai.Chat.Prompt.ask", return_value="/bye"):
         chat.run()
+        print(console_mock.print.call_args_list)
         console_mock.print.assert_called_with("[yellow]Hasta la vista![/yellow]")
 
+def test_Chat_help(chat, console_mock):
+    with patch("src.ai.Chat.Prompt.ask", side_effect=["/help", "/bye"]):
+        chat.run()
+
+        console_dump = "\n".join([call[0][0] for call in console_mock.print.call_args_list])
+        assert "/help" in console_dump
+        assert "/bye" in console_dump
+
+def test_Chat_unknown_cmd(chat, console_mock):
+    with patch("src.ai.Chat.Prompt.ask", side_effect=["/unknown", "/bye"]):
+        chat.run()
+        console_dump = "\n".join([call[0][0] for call in console_mock.print.call_args_list])
+        assert "Command not found: 'unknown'" in console_dump
 
 def test_Chat_ask(chat, assistant_mock):
     with patch("src.ai.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
