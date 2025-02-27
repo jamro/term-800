@@ -81,3 +81,22 @@ def test_CmdChat_model_missing_arg(chat, console_mock):
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
         assert "Missing argument" in console_dump
+
+
+def test_CmdChat_debug_ok(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug on", "/bye"]):
+        chat.run()
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "Debug mode" in console_dump
+
+def test_CmdChat_debug_missing_arg(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug", "/bye"]):
+        chat.run()
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "Missing argument" in console_dump
+
+def test_CmdChat_debug_wrong_arg(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug unknown", "/bye"]):
+        chat.run()
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "Invalid debug mode" in console_dump

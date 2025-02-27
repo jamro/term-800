@@ -20,6 +20,8 @@ class CmdChat(Chat):
             self._handle_help_command()
         elif command[0] == "model":
             self._handle_llm_model(command)
+        elif command[0] == "debug":
+            self._handle_debug(command)
         else:
             self.console.print(
                 f"[bold red]Command not found: '{command}'. Type /help for available commands.[/bold red]"
@@ -64,3 +66,19 @@ class CmdChat(Chat):
         self.settings.set("llm_model", command[1])
         self.assistant.model_name = command[1]
         self.console.print(f"[dim]Language model changed to '{command[1]}'.[/dim]")
+
+    def _handle_debug(self, command):
+        if len(command) < 2:
+            self.console.print(
+                "[bold red]Missing argument: Please provide a debug mode value (on/off).[/bold red]"
+            )
+            return
+
+        if command[1] not in ["on", "off"]:
+            self.console.print(
+                f"[bold red]Invalid debug mode: '{command[1]}'. Use 'on' or 'off'.[/bold red]"
+            )
+            return
+
+        self.settings.set("debug", command[1])
+        self.console.print(f"[dim]Debug mode changed to '{command[1]}'.[/dim]")

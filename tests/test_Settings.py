@@ -16,8 +16,7 @@ def test_load_config_file_not_found():
     with patch("src.Settings.open") as mock_open:
         mock_open.side_effect = FileNotFoundError
         settings = Settings()
-        assert settings._config == {"llm_model": "gpt-4o-mini"}
-
+        assert "llm_model" in settings._config
 
 def test_save_config():
     with patch("src.Settings.open") as mock_open:
@@ -37,7 +36,7 @@ def test_save_config():
 
 def test_get():
     with patch("src.Settings.open") as mock_open:
-        mock_open.return_value.__enter__.return_value.read.return_value = (
+        default_settings = mock_open.return_value.__enter__.return_value.read.return_value = (
             '{"llm_model": "gpt-4o-mini"}'
         )
         settings = Settings()

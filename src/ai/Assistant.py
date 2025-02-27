@@ -2,6 +2,7 @@ from .Conversation import Conversation
 from .TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
 from pyee import EventEmitter
+import json
 
 EXEC_GUIDELINES_PROMPT = """
 # Task Execution Guidelines:
@@ -31,6 +32,7 @@ class Assistant(Conversation):
 
     def __init__(self, shell, settings, api_key):
         self.shell = shell
+        self.settings = settings
         super().__init__(api_key, model_name=settings.get("llm_model"))
         self.tokenPricing = TokenPricing()
         self.emitter = EventEmitter()
@@ -109,6 +111,8 @@ class Assistant(Conversation):
             on_data_callback=on_data_callback,
             recurence_limit=recurence_limit,
         )
+        if self.settings.get("debug") == 'on':
+            print(json.dumps(self.history.get_items(), indent=2))
         self.history.clean_text(POST_EXEC_PROMPT)
         return response
 
