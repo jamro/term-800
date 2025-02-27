@@ -2,7 +2,6 @@ from rich.prompt import Prompt
 from rich.text import Text
 from rich.live import Live
 from rich.panel import Panel
-import re
 from time import sleep
 
 
@@ -28,7 +27,7 @@ class Chat:
         def update_panel(line):
             nonlocal log_lines, log_stream
 
-            line = ''.join(char for char in line if 32 <= ord(char) <= 126)
+            line = "".join(char for char in line if 32 <= ord(char) <= 126)
             line = line.strip()
             if len(log_lines) > 0 and log_lines[-1] == line:
                 return
