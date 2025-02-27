@@ -43,7 +43,7 @@ class Assistant(Conversation):
             output = shell.exec(command, log_stream=log_stream)
 
             if len(output) > 5000:
-                summary_convo = Conversation(self.api_key, model_name=self.model_name)
+                summary_convo = Conversation(self.api_key, model_name=self.model_name, token_stats=self.token_stats)
                 self.emitter.emit("output_summary_start")
                 output = summary_convo.ask(
                     f"""

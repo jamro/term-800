@@ -1,7 +1,7 @@
 from unittest.mock import patch, MagicMock
 from src.ai.Conversation import Conversation
 import pytest
-
+import json
 
 @pytest.fixture
 def mock_openai_chat_stream(*args, **kwargs):
@@ -167,16 +167,12 @@ def test_Conversation_stats(mock_openai_chat_stream):
         conversation.ask("Hello, how are you?", model_name="gpt-4o-mini")
         conversation.ask("Madagascar", model_name="gpt-4o")
 
-        assert conversation.token_stats == {
-            "gpt-4o-mini": {
-                "input_tokens": 29,
-                "output_tokens": 6,
-            },
-            "gpt-4o": {
-                "input_tokens": 61,
-                "output_tokens": 0,
-            },
-        }
+        print(json.dumps(conversation.token_stats, indent=4))
+
+        assert conversation.token_stats["gpt-4o-mini"]["input_tokens"] == 29
+        assert conversation.token_stats["gpt-4o-mini"]["output_tokens"] == 6
+        assert conversation.token_stats["gpt-4o"]["input_tokens"] == 61
+        assert conversation.token_stats["gpt-4o"]["output_tokens"] == 0
 
 
 def test_Conversation_update_sys_msg():

@@ -12,12 +12,12 @@ def count_tokens(text, model):
 
 class Conversation:
 
-    def __init__(self, api_key, model_name="gpt-4o-mini", system_message=""):
+    def __init__(self, api_key, model_name="gpt-4o-mini", system_message="", token_stats=None):
         self.api_key = api_key
         self.model_name = model_name
         self.history = ConvoHistory()
         self.functions = []
-        self.token_stats = {}
+        self.token_stats = token_stats or {}
         self.history.set_system_message(system_message)
 
     def add_function(self, name, description, logic, parameters={}):
