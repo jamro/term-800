@@ -4,11 +4,13 @@ from rich.live import Live
 from rich.panel import Panel
 from time import sleep
 
+
 class Chat:
-    def __init__(self, console, assistant):
+    def __init__(self, console, settings, assistant):
         self.console = console
         self.assistant = assistant
         self._is_running = False
+        self.settings = settings
 
         self.assistant.on_log_stream(self._handle_log_stream)
         self.assistant.on_output_summary_start(
@@ -79,6 +81,8 @@ class Chat:
         self.console.print("[dim]Type /help to see available system functions.[/dim]")
         self.console.print("[dim]Type /bye to terminate my session.[/dim]")
         self.console.print("")
+        self.console.print(f"[dim]Model: {self.settings.get('llm_model')}[/dim]")
+        self.console.print("")
         self.console.print(
             "[bold yellow][ Standing by for instructions. ][/bold yellow]"
         )
@@ -92,7 +96,7 @@ class Chat:
         if prompt == "/bye":
             self._is_running = False
             return
-        
+
         self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
         self.assistant.ask(
             prompt,
@@ -133,6 +137,3 @@ class Chat:
         sleep(delay)
         self.console.print("")
         sleep(delay)
-
-
-        

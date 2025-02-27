@@ -29,9 +29,9 @@ Pick the Next Action:
 
 class Assistant(Conversation):
 
-    def __init__(self, shell, api_key):
+    def __init__(self, shell, settings, api_key):
         self.shell = shell
-        super().__init__(api_key)
+        super().__init__(api_key, model_name=settings.get("llm_model"))
         self.tokenPricing = TokenPricing()
         self.emitter = EventEmitter()
 
@@ -43,7 +43,11 @@ class Assistant(Conversation):
             output = shell.exec(command, log_stream=log_stream)
 
             if len(output) > 5000:
-                summary_convo = Conversation(self.api_key, model_name=self.model_name, token_stats=self.token_stats)
+                summary_convo = Conversation(
+                    self.api_key,
+                    model_name=self.model_name,
+                    token_stats=self.token_stats,
+                )
                 self.emitter.emit("output_summary_start")
                 output = summary_convo.ask(
                     f"""

@@ -80,6 +80,7 @@ def test_RemoteShell_exec_not_connected():
         rs.exec("echo Hello")
     assert str(e.value) == "Not connected to a host"
 
+
 def test_RemoteShell_close():
     with patch("src.shell.RemoteShell.Connection") as mock_conn:
         rs = RemoteShell()

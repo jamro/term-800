@@ -1,5 +1,6 @@
 .ruff_cache
 .vscode
+term800_config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

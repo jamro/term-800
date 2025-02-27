@@ -12,7 +12,9 @@ def count_tokens(text, model):
 
 class Conversation:
 
-    def __init__(self, api_key, model_name="gpt-4o-mini", system_message="", token_stats=None):
+    def __init__(
+        self, api_key, model_name="gpt-4o-mini", system_message="", token_stats=None
+    ):
         self.api_key = api_key
         self.model_name = model_name
         self.history = ConvoHistory()

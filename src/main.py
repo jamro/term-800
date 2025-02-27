@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from src.shell.RemoteShell import RemoteShell
 from src.ai.Assistant import Assistant
 from src.chat.CmdChat import CmdChat
+from src.Settings import Settings
 
 # Load environment variables
 load_dotenv()
@@ -24,9 +25,10 @@ def main():
         )
         return None
 
+    settings = Settings()
+    settings.save_config()
     shell = RemoteShell()
-
-    chat = CmdChat(console, Assistant(shell, api_key))
+    chat = CmdChat(console, settings, Assistant(shell, settings, api_key))
     chat.welcome()
     if chat.connect():
         chat.run()

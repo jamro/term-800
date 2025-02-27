@@ -7,6 +7,13 @@ import json
 
 
 @pytest.fixture
+def mock_settings():
+    mock = MagicMock()
+    mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini"}.get(key)
+    return mock
+
+
+@pytest.fixture
 def assistant_mock():
     mock = MagicMock(spec=Assistant)
     mock.get_total_cost.return_value = 0.1
@@ -19,8 +26,8 @@ def console_mock():
 
 
 @pytest.fixture
-def chat(console_mock, assistant_mock):
-    return Chat(console_mock, assistant_mock)
+def chat(console_mock, assistant_mock, mock_settings):
+    return Chat(console_mock, mock_settings, assistant_mock)
 
 
 def test_Chat_ask(chat, assistant_mock):

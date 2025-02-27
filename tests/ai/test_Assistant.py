@@ -6,6 +6,13 @@ from src.shell.RemoteShell import RemoteShell
 
 
 @pytest.fixture
+def mock_settings():
+    mock = MagicMock()
+    mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini"}.get(key)
+    return mock
+
+
+@pytest.fixture
 def mock_openai_chat_stream_with_function(*args, **kwargs):
     func_chunk = MagicMock(arguments='{"command": "whoami"}')
     func_chunk.name = "run_shell_command"
@@ -37,7 +44,7 @@ def mock_remote_shell():
 
 
 def test_Assistant_run_command_simple(
-    mock_openai_chat_stream_with_function, mock_remote_shell
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
 ):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
@@ -47,7 +54,7 @@ def test_Assistant_run_command_simple(
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream_with_function
         )
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assistant.ask("Hello")
 
         assert mock_remote_shell.exec.call_args[0][0] == "whoami"
@@ -59,7 +66,7 @@ def test_Assistant_run_command_simple(
 
 
 def test_Assistant_run_command_hooks(
-    mock_openai_chat_stream_with_function, mock_remote_shell
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
 ):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
@@ -70,7 +77,7 @@ def test_Assistant_run_command_hooks(
             mock_openai_chat_stream_with_function
         )
 
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         on_log_stream_mock = MagicMock()
         assistant.on_log_stream(on_log_stream_mock)
         assistant.ask("Hello")
@@ -82,7 +89,7 @@ def test_Assistant_run_command_hooks(
 
 
 def test_Assistant_get_total_cost(
-    mock_openai_chat_stream_with_function, mock_remote_shell
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
 ):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
@@ -93,7 +100,7 @@ def test_Assistant_get_total_cost(
             mock_openai_chat_stream_with_function
         )
 
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assistant.ask("Hello")
 
         cost = assistant.get_total_cost()
@@ -103,7 +110,7 @@ def test_Assistant_get_total_cost(
 
 
 def test_Assistant_summarise_long_stdout(
-    mock_openai_chat_stream_with_function, mock_remote_shell
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
 ):
     with (
         patch("src.ai.Assistant.Conversation") as conversation_mock,
@@ -120,7 +127,7 @@ def test_Assistant_summarise_long_stdout(
 
         mock_remote_shell.exec.return_value = "a" * 10000
         conversation_mock.return_value.ask.return_value = "a_summary"
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assistant.on_output_summary_start(on_summary_start_mock)
         assistant.on_output_summary_end(on_summary_end_mock)
         assistant.ask("Hello")
@@ -133,10 +140,10 @@ def test_Assistant_summarise_long_stdout(
         on_summary_end_mock.assert_called_once()
 
 
-def test_Assistant_connect_ok(mock_remote_shell):
+def test_Assistant_connect_ok(mock_remote_shell, mock_settings):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
         mock_remote_shell.get_host_info.return_value = "host_info5234523"
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assistant.connect("host5", "user3")
 
         history_dump = assistant.history.dump()
@@ -147,14 +154,15 @@ def test_Assistant_connect_ok(mock_remote_shell):
         assert mock_remote_shell.connect.call_args[0][1] == "user3"
 
 
-def test_Assistant_connect_fail(mock_remote_shell):
+def test_Assistant_connect_fail(mock_remote_shell, mock_settings):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
         mock_remote_shell.connect.return_value = False
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assert not assistant.connect("host5", "user3")
 
-def test_Assistant_close(mock_remote_shell):
+
+def test_Assistant_close(mock_remote_shell, mock_settings):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
-        assistant = Assistant(mock_remote_shell, "api_key")
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
         assistant.close()
         mock_remote_shell.close.assert_called_once()

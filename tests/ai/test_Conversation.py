@@ -3,6 +3,7 @@ from src.ai.Conversation import Conversation
 import pytest
 import json
 
+
 @pytest.fixture
 def mock_openai_chat_stream(*args, **kwargs):
     responses = [
