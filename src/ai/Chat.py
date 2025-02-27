@@ -28,8 +28,7 @@ class Chat:
         def update_panel(line):
             nonlocal log_lines, log_stream
 
-            ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-            line = ANSI_ESCAPE_RE.sub("", line)
+            line = ''.join(char for char in line if 32 <= ord(char) <= 126)
             line = line.strip()
             if len(log_lines) > 0 and log_lines[-1] == line:
                 return
