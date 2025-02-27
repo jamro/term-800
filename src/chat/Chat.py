@@ -4,7 +4,6 @@ from rich.live import Live
 from rich.panel import Panel
 from time import sleep
 
-
 class Chat:
     def __init__(self, console, assistant):
         self.console = console
@@ -71,8 +70,9 @@ class Chat:
             self.console.print(
                 "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
             )
-            return None
+            return False
         self.console.print("[yellow]Connected![/yellow]\n")
+        return True
 
     def run(self):
         self._is_running = True
@@ -86,26 +86,27 @@ class Chat:
 
         while self._is_running:
             prompt = Prompt.ask(Text("$>", style="bold green"))
+            self._handle_prompt(prompt)
 
-            # prompt start from /
-            if prompt.startswith("/"):
-                self._handle_command(prompt[1:])
-                continue
+    def _handle_prompt(self, prompt):
+        if prompt == "/bye":
+            self._is_running = False
+            return
+        
+        self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
+        self.assistant.ask(
+            prompt,
+            on_data_callback=lambda data: self.console.print(
+                f"[yellow]{data}[/yellow]", end=""
+            ),
+        )
 
-            self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
-            self.assistant.ask(
-                prompt,
-                on_data_callback=lambda data: self.console.print(
-                    f"[yellow]{data}[/yellow]", end=""
-                ),
-            )
+        self.console.print()
 
-            self.console.print()
-
-            self.console.print(
-                f"[dim]Total cost: ${self.assistant.get_total_cost():.5f} [/dim]\n",
-                justify="right",
-            )
+        self.console.print(
+            f"[dim]Total cost: ${self.assistant.get_total_cost():.5f} [/dim]\n",
+            justify="right",
+        )
 
     def welcome(self, delay=0.1):
         self.console.print(
@@ -133,30 +134,5 @@ class Chat:
         self.console.print("")
         sleep(delay)
 
-    def _handle_command(self, command):
-        if command == "bye":
-            self._handle_bye_command()
-        elif command == "help":
-            self._handle_help_command()
-        else:
-            self.console.print(
-                f"[bold red]Command not found: '{command}'. Type /help for available commands.[/bold red]"
-            )
 
-    def _handle_bye_command(self):
-        self.console.print("[dim]Terminating session...[/dim]")
-        self.assistant.close()
-        self.console.print("[dim]Session terminated.[/dim]")
-        self.console.print("[yellow]Hasta la vista![/yellow]")
-        self._is_running = False
-
-    def _handle_help_command(self):
-        self.console.print("[yellow]Available commands - choose wisely:[/yellow]")
-        self.console.print()
-        self.console.print("[yellow][bold]/bye[/bold]: Terminate the session[/yellow]")
-        self.console.print(
-            "[yellow][bold]/help[/bold]: Display this help message[/yellow]"
-        )
-        self.console.print("")
-        self.console.print('[dim]"Come with me if you want to execute commands."[/dim]')
-        self.console.print("")
+        

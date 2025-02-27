@@ -1,8 +1,9 @@
 import pytest
-from src.ai.Chat import Chat
+from src.chat.Chat import Chat
 from src.ai.Assistant import Assistant
 from src.shell.LogStream import LogStream
 from unittest.mock import MagicMock, patch
+import json
 
 
 @pytest.fixture
@@ -22,35 +23,15 @@ def chat(console_mock, assistant_mock):
     return Chat(console_mock, assistant_mock)
 
 
-def test_Chat_bye(chat, console_mock):
-    with patch("src.ai.Chat.Prompt.ask", return_value="/bye"):
-        chat.run()
-        print(console_mock.print.call_args_list)
-        console_mock.print.assert_called_with("[yellow]Hasta la vista![/yellow]")
-
-def test_Chat_help(chat, console_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["/help", "/bye"]):
-        chat.run()
-
-        console_dump = "\n".join([call[0][0] for call in console_mock.print.call_args_list])
-        assert "/help" in console_dump
-        assert "/bye" in console_dump
-
-def test_Chat_unknown_cmd(chat, console_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["/unknown", "/bye"]):
-        chat.run()
-        console_dump = "\n".join([call[0][0] for call in console_mock.print.call_args_list])
-        assert "Command not found: 'unknown'" in console_dump
-
 def test_Chat_ask(chat, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
         chat.run()
         assistant_mock.ask.assert_called()
         assert assistant_mock.ask.call_args[0][0] == "Hello"
 
 
 def test_Chat_print_exec_prompt(chat, console_mock, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["whoami 23r4891", "/bye"]):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["whoami 23r4891", "/bye"]):
         chat.run()
 
         console_args = []
@@ -64,8 +45,8 @@ def test_Chat_print_exec_prompt(chat, console_mock, assistant_mock):
 
 def test_Chat_print_exec_response(chat, assistant_mock):
     with (
-        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
-        patch("src.ai.Chat.Live") as live_mock,
+        patch("src.chat.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.chat.Chat.Live") as live_mock,
     ):
         log_stream_mock = MagicMock(spec=LogStream)
         log_stream_mock.command = "whoami"
@@ -91,8 +72,8 @@ def test_Chat_print_exec_response(chat, assistant_mock):
 
 def test_Chat_print_exec_response_skip_duplicates(chat, assistant_mock):
     with (
-        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
-        patch("src.ai.Chat.Live") as live_mock,
+        patch("src.chat.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.chat.Chat.Live") as live_mock,
     ):
         log_stream_mock = MagicMock(spec=LogStream)
         log_stream_mock.command = "whoami"
@@ -114,8 +95,8 @@ def test_Chat_print_exec_response_skip_duplicates(chat, assistant_mock):
 
 def test_Chat_print_exec_response_keep_short(chat, assistant_mock):
     with (
-        patch("src.ai.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
-        patch("src.ai.Chat.Live") as live_mock,
+        patch("src.chat.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
+        patch("src.chat.Chat.Live") as live_mock,
     ):
         log_stream_mock = MagicMock(spec=LogStream)
         log_stream_mock.command = "whoami"
@@ -148,14 +129,14 @@ def test_Chat_welcome(chat, console_mock):
 
 
 def test_Chat_connect_ok(chat, console_mock, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["host212", "user847"]):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["host212", "user847"]):
         chat.connect(delay=0)
         assistant_mock.connect.assert_called_with("host212", "user847")
         console_mock.print.assert_called_with("[yellow]Connected![/yellow]\n")
 
 
 def test_Chat_connect_fail(chat, console_mock, assistant_mock):
-    with patch("src.ai.Chat.Prompt.ask", side_effect=["host212", "user847"]):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["host212", "user847"]):
         assistant_mock.connect.return_value = False
         chat.connect(delay=0)
         console_mock.print.assert_called_with(

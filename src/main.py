@@ -4,7 +4,7 @@ from rich.console import Console
 from dotenv import load_dotenv
 from src.shell.RemoteShell import RemoteShell
 from src.ai.Assistant import Assistant
-from src.ai.Chat import Chat
+from src.chat.CmdChat import CmdChat
 
 # Load environment variables
 load_dotenv()
@@ -26,10 +26,10 @@ def main():
 
     shell = RemoteShell()
 
-    chat = Chat(console, Assistant(shell, api_key))
+    chat = CmdChat(console, Assistant(shell, api_key))
     chat.welcome()
-    chat.connect()
-    chat.run()
+    if chat.connect():
+        chat.run()
 
 
 if __name__ == "__main__":
