@@ -44,6 +44,9 @@ class CmdChat(Chat):
         self.console.print(
             "[yellow][bold]/model <llm_model>[/bold]: Change the language model[/yellow]"
         )
+        self.console.print(
+            "[yellow][bold]/debug <on/off>[/bold]: Enable/disable debug mode[/yellow]"
+        )
         self.console.print("")
         self.console.print('[dim]"Come with me if you want to execute commands."[/dim]')
         self.console.print("")

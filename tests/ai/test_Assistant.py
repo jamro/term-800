@@ -18,10 +18,13 @@ def mock_openai_chat_stream(*args, **kwargs):
 
     return generator()
 
+
 @pytest.fixture
 def mock_settings():
     mock = MagicMock()
-    mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini", "debug": "off"}.get(key)
+    mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini", "debug": "off"}.get(
+        key
+    )
     return mock
 
 
@@ -180,12 +183,16 @@ def test_Assistant_close(mock_remote_shell, mock_settings):
         assistant.close()
         mock_remote_shell.close.assert_called_once()
 
+
 def test_ask(mock_remote_shell, mock_settings, mock_openai_chat_stream):
     with (
         patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
         patch("builtins.print") as mock_print,
     ):
-        mock_settings.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini", "debug": "on"}.get(key)
+        mock_settings.get.side_effect = lambda key: {
+            "llm_model": "gpt-4o-mini",
+            "debug": "on",
+        }.get(key)
         mock_client_instance = mock_openai.return_value
         mock_client_instance.chat.completions.create.return_value = (
             mock_openai_chat_stream
@@ -194,4 +201,3 @@ def test_ask(mock_remote_shell, mock_settings, mock_openai_chat_stream):
         assert conversation.ask("Hello") == "Hello"
         mock_print.assert_called_once()
         assert "Hello" in mock_print.call_args[0][0]
-

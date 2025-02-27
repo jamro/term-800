@@ -18,6 +18,7 @@ def test_load_config_file_not_found():
         settings = Settings()
         assert "llm_model" in settings._config
 
+
 def test_save_config():
     with patch("src.Settings.open") as mock_open:
         mock_open.return_value.__enter__.return_value.read.return_value = (
@@ -36,9 +37,9 @@ def test_save_config():
 
 def test_get():
     with patch("src.Settings.open") as mock_open:
-        default_settings = mock_open.return_value.__enter__.return_value.read.return_value = (
-            '{"llm_model": "gpt-4o-mini"}'
-        )
+        default_settings = (
+            mock_open.return_value.__enter__.return_value.read.return_value
+        ) = '{"llm_model": "gpt-4o-mini"}'
         settings = Settings()
 
         assert settings.get("llm_model") == "gpt-4o-mini"
