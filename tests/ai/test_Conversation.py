@@ -1,7 +1,6 @@
 from unittest.mock import patch, MagicMock
 from src.ai.Conversation import Conversation
 import pytest
-import json
 
 
 @pytest.fixture
@@ -119,7 +118,7 @@ def test_ask_recursion_limit(mock_openai_chat_stream_with_function):
         conversation.ask("Hello")
         test_logic.assert_called_once()
 
-        history_dump = json.dumps(conversation.history)
+        history_dump = conversation.history.dump()
         assert "Test Resonse From Function" in history_dump
 
         assert mock_client_instance.chat.completions.create.call_count == 2
@@ -129,7 +128,7 @@ def test_set_system_message():
     conversation = Conversation(
         "api_key", system_message="You are a test assistant 7362"
     )
-    history_dump = json.dumps(conversation.history)
+    history_dump = conversation.history.dump()
     assert "You are a test assistant 7362" in history_dump
 
 
@@ -168,8 +167,6 @@ def test_Conversation_stats(mock_openai_chat_stream):
         conversation.ask("Hello, how are you?", model_name="gpt-4o-mini")
         conversation.ask("Madagascar", model_name="gpt-4o")
 
-  
-
         assert conversation.token_stats == {
             "gpt-4o-mini": {
                 "input_tokens": 29,
@@ -181,10 +178,13 @@ def test_Conversation_stats(mock_openai_chat_stream):
             },
         }
 
-def test_Conversation_update_sys_msg():
-    conversation = Conversation("api_key", system_message="You are a test assistant 535234")
-    conversation.set_system_message("You are a test assistant 43452")
-    assert conversation.get_system_message() == "You are a test assistant 43452"
 
-    history_dump = json.dumps(conversation.history)
+def test_Conversation_update_sys_msg():
+    conversation = Conversation(
+        "api_key", system_message="You are a test assistant 535234"
+    )
+    conversation.history.set_system_message("You are a test assistant 43452")
+    assert conversation.history.get_system_message() == "You are a test assistant 43452"
+
+    history_dump = conversation.history.dump()
     assert "You are a test assistant 43452" in history_dump

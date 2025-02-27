@@ -1,6 +1,7 @@
 import openai
 import json
 import tiktoken
+from .ConvoHistory import ConvoHistory
 
 
 def count_tokens(text, model):
@@ -14,20 +15,10 @@ class Conversation:
     def __init__(self, api_key, model_name="gpt-4o-mini", system_message=""):
         self.api_key = api_key
         self.model_name = model_name
-        self.history = []
+        self.history = ConvoHistory()
         self.functions = []
         self.token_stats = {}
-        self._system_block = {
-            "role": "system",
-            "content": system_message,
-        }
-        self.history.append(self._system_block)
-
-    def set_system_message(self, message):
-        self._system_block["content"] = message
-
-    def get_system_message(self):
-        return self._system_block["content"]
+        self.history.set_system_message(system_message)
 
     def add_function(self, name, description, logic, parameters={}):
         self.functions.append(
@@ -71,14 +62,14 @@ class Conversation:
             self.token_stats[model_name]["output_tokens"] = 0
 
         if query:
-            self.history.append({"role": "user", "content": query})
+            self.history.append_message("user", query)
 
         functions_def = [
             {k: v for k, v in func.items() if k != "logic"} for func in self.functions
         ]
         response = client.chat.completions.create(
             model=model_name,
-            messages=self.history,
+            messages=self.history.get_items(),
             functions=functions_def if self.functions else None,
             stream=True,
         )
@@ -90,7 +81,7 @@ class Conversation:
         function_args = ""
         response_all = ""
 
-        input_tokens += count_tokens(json.dumps(self.history), model_name)
+        input_tokens += count_tokens(self.history.dump(), model_name)
         if self.functions:
             input_tokens += count_tokens(json.dumps(functions_def), model_name)
 
@@ -123,14 +114,10 @@ class Conversation:
                 function_response = matching_function["logic"](**function_args_json)
 
                 if response_all:
-                    self.history.append({"role": "assistant", "content": response_all})
+                    self.history.append_message("assistant", response_all)
 
-                self.history.append(
-                    {
-                        "role": "function",
-                        "name": function_name,
-                        "content": function_response,
-                    }
+                self.history.append_message(
+                    "function", function_response, {"name": function_name}
                 )
 
                 # Count output tokens
@@ -146,7 +133,7 @@ class Conversation:
                     recurence_limit=recurence_limit - 1,
                 )
 
-        self.history.append({"role": "assistant", "content": response_all})
+        self.history.append_message("assistant", response_all)
 
         # Count output tokens
         output_tokens += count_tokens(response_all, model_name)

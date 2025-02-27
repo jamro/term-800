@@ -132,21 +132,23 @@ def test_Assistant_summarise_long_stdout(
         on_summary_start_mock.assert_called_once()
         on_summary_end_mock.assert_called_once()
 
+
 def test_Assistant_connect_ok(mock_remote_shell):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
         mock_remote_shell.get_host_info.return_value = "host_info5234523"
         assistant = Assistant(mock_remote_shell, "api_key")
-        assistant.connect('host5', 'user3')
+        assistant.connect("host5", "user3")
 
-        history_dump = json.dumps(assistant.history, indent=2)
+        history_dump = assistant.history.dump()
         assert "host_info5234523" in history_dump
         assert "You are system admin" in history_dump
 
-        assert mock_remote_shell.connect.call_args[0][0] == 'host5'
-        assert mock_remote_shell.connect.call_args[0][1] == 'user3'
+        assert mock_remote_shell.connect.call_args[0][0] == "host5"
+        assert mock_remote_shell.connect.call_args[0][1] == "user3"
+
 
 def test_Assistant_connect_fail(mock_remote_shell):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
         mock_remote_shell.connect.return_value = False
         assistant = Assistant(mock_remote_shell, "api_key")
-        assert not assistant.connect('host5', 'user3')
+        assert not assistant.connect("host5", "user3")

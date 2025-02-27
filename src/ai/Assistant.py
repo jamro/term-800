@@ -110,6 +110,6 @@ class Assistant(Conversation):
             # System Information:
             {host_info}
         """
-        self.set_system_message(system_message)
+        self.history.set_system_message(system_message)
 
         return True
