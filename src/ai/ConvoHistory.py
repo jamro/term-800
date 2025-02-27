@@ -23,3 +23,11 @@ class ConvoHistory:
 
     def dump(self):
         return json.dumps(self._items)
+
+    def clean_text(self, text):
+        for item in self._items[1:]:
+            item["content"] = item["content"].replace(text, "")
+
+    def clean_transformed(self, func):
+        for item in self._items[1:]:
+            item["content"] = func(item["content"])

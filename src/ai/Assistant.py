@@ -3,6 +3,16 @@ from .TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
 from pyee import EventEmitter
 
+POST_EXEC_PROMPT = """
+ ---
+Pick the Next Action:
+- Check whether the command was successful and the output is as expected. 
+- In case of errors or unexpected output, investigate the issue and try to solve it.
+- If further actions are required, to fullfill the task, EXECUTING them yourself.
+- If the task is completed, verify the completion and inform the user.
+- EXECUTE all necessary shell commands yourself instead of asking the user to do so.
+"""
+
 
 class Assistant(Conversation):
 
@@ -48,14 +58,7 @@ class Assistant(Conversation):
 
               OUTPUT:
               {output}
-
-              ---
-              Pick the Next Action:
-              - Check whether the command was successful and the output is as expected. 
-              - In case of errors or unexpected output, investigate the issue and try to solve it.
-              - If further actions are required, to fullfill the task, EXECUTING them yourself.
-              - If the task is completed, verify the completion and inform the user.
-              - EXECUTE all necessary shell commands yourself instead of asking the user to do so.
+              {POST_EXEC_PROMPT}
               """
 
             return result
@@ -75,6 +78,22 @@ class Assistant(Conversation):
                 "required": ["command"],
             },
         )
+
+    def ask(
+        self,
+        query,
+        model_name=None,
+        on_data_callback=None,
+        recurence_limit=25,
+    ):
+        response = super().ask(
+            query,
+            model_name=model_name,
+            on_data_callback=on_data_callback,
+            recurence_limit=recurence_limit,
+        )
+        self.history.clean_text(POST_EXEC_PROMPT)
+        return response
 
     def on_log_stream(self, handler):
         self.emitter.on("log_stream", handler)
