@@ -11,10 +11,7 @@ class Settings:
             with open(self.config_file, "r") as file:
                 return json.load(file)
         except FileNotFoundError:
-            return {
-                "llm_model": "gpt-4o-mini",
-                "debug": "off",
-            }
+            return {"llm_model": "gpt-4o-mini", "host:": "skynet.local", "user": "lab"}
 
     def save_config(self):
         with open(self.config_file, "w") as file:

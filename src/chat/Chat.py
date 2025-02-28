@@ -56,10 +56,14 @@ class Chat:
         sleep(delay)
         self.console.print("")
 
-        host = Prompt.ask(
-            Text("HOST NAME: ", style="bold green"), default="skynet.local"
-        )
-        user = Prompt.ask(Text("USER NAME: ", style="bold green"), default="lab")
+        default_host = self.settings.get("host") or "skynet.local"
+        default_user = self.settings.get("user") or "lab"
+
+        host = Prompt.ask(Text("HOST NAME: ", style="bold green"), default=default_host)
+        user = Prompt.ask(Text("USER NAME: ", style="bold green"), default=default_user)
+
+        self.settings.set("host", host)
+        self.settings.set("user", user)
 
         sleep(delay)
         self.console.print("")

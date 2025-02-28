@@ -2,14 +2,16 @@ import pytest
 from src.chat.Chat import Chat
 from src.ai.Assistant import Assistant
 from src.shell.LogStream import LogStream
+from src.Settings import Settings
 from unittest.mock import MagicMock, patch
 import json
 
 
 @pytest.fixture
 def mock_settings():
-    mock = MagicMock()
+    mock = MagicMock(spec=Settings)
     mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini"}.get(key)
+    mock.set.side_effect = lambda key, value: None
     return mock
 
 
@@ -137,3 +139,11 @@ def test_Chat_connect_fail(chat, console_mock, assistant_mock):
             "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
         )
         assistant_mock.connect.assert_called_with("host212", "user847")
+
+
+def test_Chat_store_default_host_and_user(chat, mock_settings):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["host3", "user1"]):
+        chat.connect(delay=0)
+
+        mock_settings.set.assert_any_call("host", "host3")
+        mock_settings.set.assert_any_call("user", "user1")
