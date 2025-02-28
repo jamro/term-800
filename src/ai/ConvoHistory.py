@@ -31,3 +31,6 @@ class ConvoHistory:
     def clean_transformed(self, func):
         for item in self._items[1:]:
             item["content"] = func(item["content"])
+
+    def clear(self):
+        self._items = [self._system_block]

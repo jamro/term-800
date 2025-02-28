@@ -1,6 +1,7 @@
 import pytest
 from src.chat.CmdChat import CmdChat
 from src.ai.Assistant import Assistant
+from src.ai.ConvoHistory import ConvoHistory
 from src.Settings import Settings
 from unittest.mock import MagicMock, patch
 import json
@@ -16,6 +17,9 @@ def mock_settings():
 @pytest.fixture
 def assistant_mock():
     mock = MagicMock(spec=Assistant)
+    mock.history = MagicMock(spec=ConvoHistory)
+    mock.model_name = "gpt-4o-mini"
+    mock.history.get_items.return_value = [{"role": "system", "content": "Hello"}]
     mock.get_total_cost.return_value = 0.1
     return mock
 
@@ -83,22 +87,14 @@ def test_CmdChat_model_missing_arg(chat, console_mock):
         assert "Missing argument" in console_dump
 
 
-def test_CmdChat_debug_ok(chat, console_mock):
-    with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug on", "/bye"]):
-        chat.run()
-        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
-        assert "Debug mode" in console_dump
-
-
-def test_CmdChat_debug_missing_arg(chat, console_mock):
+def test_CmdChat_debug(chat, console_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug", "/bye"]):
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
-        assert "Missing argument" in console_dump
+        assert "----- CONVERSATION HISTORY -----" in console_dump
 
 
-def test_CmdChat_debug_wrong_arg(chat, console_mock):
-    with patch("src.chat.Chat.Prompt.ask", side_effect=["/debug unknown", "/bye"]):
+def test_CmdChat_clear(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/clear", "/bye"]):
         chat.run()
-        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
-        assert "Invalid debug mode" in console_dump
+        chat.assistant.history.clear.assert_called()

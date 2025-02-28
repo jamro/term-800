@@ -59,3 +59,12 @@ def test_ConvoHistory_clean_transformed():
     assert convo.get_items()[0]["content"] == "SysRockMsg"
     assert convo.get_items()[1]["content"] == "HelloABC1876"
     assert convo.get_items()[2]["content"] == "Ro.ck\nABC\nROCK"
+
+
+def test_ConvoHistory_clear():
+    convo = ConvoHistory()
+    convo.set_system_message("Sys73269")
+    convo.append_message("user", "HelloRock1876")
+    convo.clear()
+    assert len(convo.get_items()) == 1
+    assert convo.get_system_message() == "Sys73269"

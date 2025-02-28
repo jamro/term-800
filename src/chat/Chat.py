@@ -97,7 +97,6 @@ class Chat:
             self._is_running = False
             return
 
-        self.console.print(f"[bold yellow]{prompt}[/bold yellow]")
         self.assistant.ask(
             prompt,
             on_data_callback=lambda data: self.console.print(

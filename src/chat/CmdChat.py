@@ -1,4 +1,5 @@
 from src.chat.Chat import Chat
+import json
 
 
 class CmdChat(Chat):
@@ -20,8 +21,10 @@ class CmdChat(Chat):
             self._handle_help_command()
         elif command[0] == "model":
             self._handle_llm_model(command)
+        elif command[0] == "clear":
+            self._handle_clear()
         elif command[0] == "debug":
-            self._handle_debug(command)
+            self._handle_debug()
         else:
             self.console.print(
                 f"[bold red]Command not found: '{command}'. Type /help for available commands.[/bold red]"
@@ -45,7 +48,10 @@ class CmdChat(Chat):
             "[yellow][bold]/model <llm_model>[/bold]: Change the language model[/yellow]"
         )
         self.console.print(
-            "[yellow][bold]/debug <on/off>[/bold]: Enable/disable debug mode[/yellow]"
+            "[yellow][bold]/clear[/bold]: clear the conversation history starting chat[/yellow]"
+        )
+        self.console.print(
+            "[yellow][bold]/debug[/bold]: print raw LLM conversation history[/yellow]"
         )
         self.console.print("")
         self.console.print('[dim]"Come with me if you want to execute commands."[/dim]')
@@ -54,11 +60,11 @@ class CmdChat(Chat):
     def _handle_llm_model(self, command):
         if len(command) < 2:
             self.console.print(
-                "[bold red]Missing argument: Please provide a language model name.[/bold red]"
+                f"[bold red]Missing argument: Please provide a language model name. Current model: '{self.assistant.model_name}'[/bold red]"
             )
             return
 
-        supported_models = ["gpt-4o-mini", "gpt-4o"]
+        supported_models = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]
 
         if command[1] not in supported_models:
             self.console.print(
@@ -70,18 +76,11 @@ class CmdChat(Chat):
         self.assistant.model_name = command[1]
         self.console.print(f"[dim]Language model changed to '{command[1]}'.[/dim]")
 
-    def _handle_debug(self, command):
-        if len(command) < 2:
-            self.console.print(
-                "[bold red]Missing argument: Please provide a debug mode value (on/off).[/bold red]"
-            )
-            return
+    def _handle_debug(self):
+        items = self.assistant.history.get_items()
+        self.console.print("----- CONVERSATION HISTORY -----")
+        self.console.print(json.dumps(items, indent=4), highlight=True)
 
-        if command[1] not in ["on", "off"]:
-            self.console.print(
-                f"[bold red]Invalid debug mode: '{command[1]}'. Use 'on' or 'off'.[/bold red]"
-            )
-            return
-
-        self.settings.set("debug", command[1])
-        self.console.print(f"[dim]Debug mode changed to '{command[1]}'.[/dim]")
+    def _handle_clear(self):
+        self.assistant.history.clear()
+        self.console.print("[dim]Conversation history cleared.[/dim]")
