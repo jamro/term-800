@@ -3,7 +3,7 @@ from pyee import EventEmitter
 from src.shell.LogStream import LogStream
 
 
-def test_logstream_write_emits_log_event():
+def test_LogStream_write_emits_log_event():
     log_stream = LogStream("test_command")
     log_lines = []
 
@@ -11,12 +11,12 @@ def test_logstream_write_emits_log_event():
         log_lines.append(line)
 
     log_stream.on_log(log_handler)
-    log_stream.write("line1\nline2\nline3")
+    log_stream.write("line1\nline2\rline3\n")
 
-    assert log_lines == ["line1", "line2", "line3"]
+    assert log_lines == ["line1\n", "line2\r", "line3\n"]
 
 
-def test_logstream_done_emits_complete_event():
+def test_LogStream_done_emits_complete_event():
     log_stream = LogStream("test_command")
     complete_called = False
 
@@ -30,12 +30,12 @@ def test_logstream_done_emits_complete_event():
     assert complete_called
 
 
-def test_logstream_command_initialization():
+def test_LogStream_command_initialization():
     command = "test_command"
     log_stream = LogStream(command)
     assert log_stream.command == command
 
 
-def test_logstream_emitter_initialization():
+def test_LogStream_emitter_initialization():
     log_stream = LogStream("test_command")
     assert isinstance(log_stream.emitter, EventEmitter)

@@ -1,5 +1,6 @@
 from fabric import Connection
 from src.shell.LogStream import LogStream
+import re
 
 
 class RemoteShell:
@@ -18,6 +19,28 @@ class RemoteShell:
         except Exception:
             return False
         return True
+
+    def _apply_r(self, text):
+        lines = text.split("\n")
+        processed_lines = []
+
+        for line in lines:
+            final_line = []
+            index = 0  # Tracks position for overwriting
+
+            for char in line:
+                if char == "\r":
+                    index = 0  # Move cursor to the beginning
+                else:
+                    if index < len(final_line):
+                        final_line[index] = char  # Overwrite character
+                    else:
+                        final_line.append(char)  # Append new character
+                    index += 1
+
+            processed_lines.append("".join(final_line))
+
+        return "\n".join(processed_lines)
 
     def exec(self, command, log_stream=None):
         if not self.conn:
@@ -41,6 +64,12 @@ class RemoteShell:
             full_output += f"\nError: {result.stderr}"
         if result.failed:
             full_output += f"\nExit Code: {result.exited}"
+
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        full_output = ansi_escape.sub("", full_output)
+        full_output = self._apply_r(full_output)
+        full_output = re.sub(r"\n\n+", "\n", full_output)
+
         return full_output
 
     def get_host_info(self):

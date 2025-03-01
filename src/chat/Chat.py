@@ -3,6 +3,7 @@ from rich.text import Text
 from rich.live import Live
 from rich.panel import Panel
 from time import sleep
+import re
 
 
 class Chat:
@@ -25,18 +26,41 @@ class Chat:
         live = Live(Panel("...", title=log_stream.command), refresh_per_second=4)
         live.start()
         panel_height = 5
-        log_lines = []
+        log_lines = [""]
 
         def update_panel(line):
             nonlocal log_lines, log_stream
 
+            add_newline = line.endswith(
+                "\n"
+            )  # if the line ends with a newline, we want to add a new line to the log
+
+            # remove ansi escape codes (e.g. color codes) from the line
+            ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+            line = ansi_escape.sub("", line)
+
+            # remove non-printable characters from the line
             line = "".join(char for char in line if 32 <= ord(char) <= 126)
             line = line.strip()
-            if len(log_lines) > 0 and log_lines[-1] == line:
+
+            # if the line is the same as the last line, we don't need to update the log
+            if len(log_lines) > 1 and log_lines[-2].strip() == line.strip():
                 return
 
-            log_lines.append(line)
+            # if the line is not the same as the last line, we update the log
+            # we overwrite the last line in the log with the new text to simulate \r behavior
+            log_lines[-1] = line
+
+            # if the line ends with a newline, we add a new line to the log
+            if add_newline and log_lines[-1] != "":
+                log_lines.append("")
+
             log = "\n".join(log_lines[-panel_height:])
+            if log.endswith(
+                "\n"
+            ):  # remove trailing newline before printing in the panel
+                log = log[:-1]
+
             if len(log_lines) > panel_height:
                 log = f"...\n{log}"
             log = f"[dim]{log}[/dim]"

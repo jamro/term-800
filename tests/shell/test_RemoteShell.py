@@ -54,6 +54,21 @@ def test_RemoteShell_exec_fail():
         assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello\nError: Error\nExit Code: 1"
 
+def test_RemoteShell_exec_carriage_return():
+    with patch("src.shell.RemoteShell.Connection") as mock_conn:
+
+        rs = RemoteShell()
+        mock_conn.return_value.run.return_value.stdout = "Hello\rWorld"
+        mock_conn.return_value.run.return_value.stderr = ""
+        mock_conn.return_value.run.return_value.failed = False
+        mock_conn.return_value.run.return_value.exited = 0
+        rs.connect("localhost", "user")
+        result = rs.exec("echo Hello")
+        mock_conn.assert_called_once_with(host="localhost", user="user")
+        mock_conn.return_value.run.assert_called_once()
+        assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
+        assert result == "World"
+
 
 def test_RemoteShell_get_host_info():
     with patch("src.shell.RemoteShell.Connection") as mock_conn:

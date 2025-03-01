@@ -9,7 +9,7 @@ class LogStream(io.StringIO):
         self.emitter = EventEmitter()
 
     def write(self, text):
-        for line in text.splitlines():
+        for line in text.splitlines(keepends=True):
             self.emitter.emit("log", line)
 
     def done(self):
