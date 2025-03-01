@@ -230,8 +230,11 @@ def test_Assistant_think_skip_plan(mock_remote_shell, mock_settings):
         assert "Hello" in messages_snapshots[0][-1]["content"]
         assert "Are there any next steps" in messages_snapshots[1][-1]["content"]
 
-        #chain_of_thoughts_log = conversation.get_chain_of_thoughts_log()
-        #assert len(chain_of_thoughts_log) == 3
+        chain_of_thoughts_log = conversation.get_chain_of_thoughts_log()
+        assert len(chain_of_thoughts_log) == 3
+        assert chain_of_thoughts_log[0]["step"] == "EntryThought"
+        assert chain_of_thoughts_log[1]["step"] == "QueryThought"
+        assert chain_of_thoughts_log[2]["step"] == "AnswerValidateThought"
 
 
 def test_Assistant_think_simple(mock_remote_shell, mock_settings):

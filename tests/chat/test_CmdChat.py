@@ -21,7 +21,16 @@ def assistant_mock():
     mock.model_name = "gpt-4o-mini"
     mock.history.get_items.return_value = [{"role": "system", "content": "Hello"}]
     mock.get_chain_of_thoughts_log.return_value = [
-        {"step": "main_response", "query": "Hello", "response": "Hi"},
+        {
+            "step": "test_thought",
+            "input": {
+                "query": "Hello",
+            },
+            "output": {
+                "query": "Hello",
+                "answer": "Hi",
+            },
+        }
     ]
     mock.get_total_cost.return_value = 0.1
     return mock

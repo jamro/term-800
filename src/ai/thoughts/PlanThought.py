@@ -1,8 +1,9 @@
 from src.ai.ThoughtNode import ThoughtNode
 
+
 class PlanThought(ThoughtNode):
 
-    def __init__(self, assistant, model_name='gpt-4o-mini', on_data_callback=None):
+    def __init__(self, assistant, model_name="gpt-4o-mini", on_data_callback=None):
         self.assistant = assistant
         self.model_name = model_name
         self.on_data_callback = on_data_callback
@@ -46,7 +47,7 @@ class PlanThought(ThoughtNode):
         )
         if self.on_data_callback:
             self.on_data_callback("\n")
-            
+
         self.assistant.history.clean_text(plan_prompt)
 
         return input

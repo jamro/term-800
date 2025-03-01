@@ -1,7 +1,8 @@
 from src.ai.ThoughtNode import ThoughtNode
 
+
 class EntryThought(ThoughtNode):
-  
+
     def __init__(self):
         super().__init__(thought=None)
 

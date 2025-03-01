@@ -1,7 +1,13 @@
 from src.ai.Conversation import Conversation
 from src.ai.TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
-from src.ai.thoughts import EntryThought, QueryThought, AnswerValidateThought, ComplexityThought, PlanThought
+from src.ai.thoughts import (
+    EntryThought,
+    QueryThought,
+    AnswerValidateThought,
+    ComplexityThought,
+    PlanThought,
+)
 from pyee import EventEmitter
 
 EXEC_GUIDELINES_PROMPT = """
@@ -107,43 +113,46 @@ class Assistant(Conversation):
         on_plan_callback=None,
         prepare_plan=True,
     ):
-        
+
         entry_node = EntryThought()
         main_query_node = QueryThought(
-            assistant=self, 
+            assistant=self,
             post_exec_prompt=POST_EXEC_PROMPT,
             model_name=model_name,
             on_data_callback=on_data_callback,
-          ) 
+        )
         validate_node = AnswerValidateThought(
-            assistant=self, 
+            assistant=self,
             model_name=model_name,
         )
         complexity_node = ComplexityThought(
-            assistant=self, 
+            assistant=self,
             model_name=model_name,
         )
         plan_node = PlanThought(
-            assistant=self, 
+            assistant=self,
             model_name=model_name,
             on_data_callback=on_plan_callback,
         )
 
-        entry_node.connect(main_query_node, lambda x: x["prepare_plan"] == False)
-        entry_node.connect(complexity_node, lambda x: x["prepare_plan"] == True)
+        entry_node.connect(main_query_node, lambda x: not x["prepare_plan"])
+        entry_node.connect(complexity_node, lambda x: x["prepare_plan"])
         complexity_node.connect(plan_node, lambda x: x["complexity"] == "COMPLEX")
         complexity_node.connect(main_query_node, lambda x: x["complexity"] != "COMPLEX")
         plan_node.connect(main_query_node)
         main_query_node.connect(validate_node)
         validate_node.connect(main_query_node, lambda x: x["next_node"] == "NEXT")
 
-        output = entry_node.execute({
-            "query": query, 
-            "prepare_plan": prepare_plan, 
-        })
+        output = entry_node.execute(
+            {
+                "query": query,
+                "prepare_plan": prepare_plan,
+            }
+        )
+
+        self._chain_of_thoughts_log = entry_node.log
 
         return output["response"]
-
 
     def on_log_stream(self, handler):
         self.emitter.on("log_stream", handler)

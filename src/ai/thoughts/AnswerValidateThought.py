@@ -1,8 +1,9 @@
 from src.ai.ThoughtNode import ThoughtNode
 
+
 class AnswerValidateThought(ThoughtNode):
 
-    def __init__(self, assistant, model_name='gpt-4o-mini'):
+    def __init__(self, assistant, model_name="gpt-4o-mini"):
         self.assistant = assistant
         self.model_name = model_name
         super().__init__(thought=None)
@@ -18,7 +19,7 @@ class AnswerValidateThought(ThoughtNode):
           - 'NEXT' if more information is needed to complete the task.
           Do not provide any additional information.
         """
-        
+
         validation_response = self.assistant.ask(
             validation_prompt,
             model_name=self.model_name,

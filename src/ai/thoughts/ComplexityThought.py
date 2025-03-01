@@ -1,8 +1,9 @@
 from src.ai.ThoughtNode import ThoughtNode
 
+
 class ComplexityThought(ThoughtNode):
 
-    def __init__(self, assistant, model_name='gpt-4o-mini'):
+    def __init__(self, assistant, model_name="gpt-4o-mini"):
         self.assistant = assistant
         self.model_name = model_name
         super().__init__(thought=None)
@@ -17,8 +18,7 @@ class ComplexityThought(ThoughtNode):
         """
 
         complexity_response = self.assistant.ask(
-            complexity_prompt,
-            model_name=self.model_name
+            complexity_prompt, model_name=self.model_name
         )
         self.assistant.history.undo(2)
 

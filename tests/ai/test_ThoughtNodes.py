@@ -21,7 +21,7 @@ def test_THoughtNode_no_thought():
     assert node.execute() == None
 
 
-def test_ChainOfThoughts_flow_simple():
+def test_ThoughtNode_flow():
 
     node1 = ThoughtNode(thought=lambda input: input + "X")
     node2 = ThoughtNode(thought=lambda input: input + "A")
@@ -33,3 +33,37 @@ def test_ChainOfThoughts_flow_simple():
     assert node1.execute("X") == "XXA"
     assert node1.execute("Y") == "YXB"
     assert node1.execute("Z") == "ZX"
+
+
+def test_ThoughtNode_log():
+
+    class CustomNode(ThoughtNode):
+        def __init__(self, thought=None):
+            super().__init__(thought)
+
+    node1 = ThoughtNode(thought=lambda input: input + "X")
+    node2 = CustomNode(thought=lambda input: input + "A")
+    node3 = ThoughtNode(thought=lambda input: input + "B")
+
+    node1.connect(node2)
+    node2.connect(node3)
+
+    node1.execute("X")
+
+    assert node1.log == [
+        {
+            "step": "ThoughtNode",
+            "input": "X",
+            "output": "XX",
+        },
+        {
+            "step": "CustomNode",
+            "input": "XX",
+            "output": "XXA",
+        },
+        {
+            "step": "ThoughtNode",
+            "input": "XXA",
+            "output": "XXAB",
+        },
+    ]

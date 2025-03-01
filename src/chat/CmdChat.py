@@ -81,10 +81,19 @@ class CmdChat(Chat):
         self.console.print("----- CONVERSATION HISTORY -----")
         self.console.print(json.dumps(items, indent=4), highlight=True)
         self.console.print("----- CHAIN OF THOUGHTS LOG -----")
-        self.console.print(
-            json.dumps(self.assistant.get_chain_of_thoughts_log(), indent=4),
-            highlight=True,
-        )
+        get_chain_of_thoughts_log = self.assistant.get_chain_of_thoughts_log()
+        for log in get_chain_of_thoughts_log:
+            self.console.print(
+                f"----- [bold]{log['step']}[/bold] ------------------------------------"
+            )
+            self.console.print(
+                "[bold]>>> INPUT:  [/bold]" + json.dumps(log["input"], indent=4),
+                highlight=True,
+            )
+            self.console.print(
+                "[bold]>>> OUTPUT: [/bold]" + json.dumps(log["output"], indent=4),
+                highlight=True,
+            )
 
     def _handle_clear(self):
         self.assistant.history.clear()
