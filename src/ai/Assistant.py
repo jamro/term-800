@@ -1,6 +1,7 @@
-from .Conversation import Conversation
-from .TokenPricing import TokenPricing
+from src.ai.Conversation import Conversation
+from src.ai.TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
+from src.ai.thoughts import EntryThought, QueryThought, AnswerValidateThought, ComplexityThought, PlanThought
 from pyee import EventEmitter
 
 EXEC_GUIDELINES_PROMPT = """
@@ -104,130 +105,45 @@ class Assistant(Conversation):
         model_name=None,
         on_data_callback=None,
         on_plan_callback=None,
-        recurence_limit=50,
         prepare_plan=True,
     ):
-
-        self._chain_of_thoughts_log.append(
-            {
-                "step": "think",
-                "query": query,
-                "prepare_plan": prepare_plan,
-            }
-        )
-
-        think_prompt = f"""
-          The main prompt was: '{query}'.  
-          Analyze the prompt and determine its complexity.
-          Answer 'COMPLEX' if the prompt requires execution of multiple commands or complex logic.
-          Answer 'SIMPLE' if the prompt can be completed with a single command or requires minimal logic.
-        """
-
-        plan_prompt = f"""
-        Prepare a plan for prompt: '{query}'.
-          - Define goal of the plan
-          - List of steps to achieve the goal
-          - Expected outcome of each step
-          - The plan must include collecting neccessary information from the host, executing commands and verifying the output.
-
-          EXAMPLE
-          Goal of the Plan:
-          Install a LAMP (Linux, Apache, MySQL, PHP) stack on the system.
-
-          Steps to Achieve the Goal:
-
-          1. Update Package Index
-            - Expected Outcome: Ensure the local package index is up-to-date.
-
-          2. ...
-
-          3. ...
-
-          ...
-
-          Collecting Necessary Information from the Host:
-          - Check the current system OS and version.
-          - Check current installed packages to avoid redundancy.
-          - Verify current service statuses to ensure clean installations. 
-        """
-
-        validation_prompt = f"""
-          The main prompt was: '{query}'. 
-          Was it successfully completed or answered? Are there any next steps or follow-up actions required?
-          Answer with:
-          - 'YES' if the task was successfully completed or answered.
-          - 'NO' if the task was not completed or answered.
-          - 'NEXT' if more information is needed to complete the task.
-          Do not provide any additional information.
-        """
-
-        if prepare_plan:
-            think_response = super().ask(
-                think_prompt,
-                model_name=model_name,
-                recurence_limit=recurence_limit,
-            )
-            self._chain_of_thoughts_log.append(
-                {
-                    "step": "think_response",
-                    "response": think_response,
-                }
-            )
-            self.history.undo(2)
-
-            if think_response == "COMPLEX":
-                self.ask(
-                    plan_prompt,
-                    model_name=model_name,
-                    recurence_limit=recurence_limit,
-                    on_data_callback=on_plan_callback,
-                )
-                self.history.clean_text(plan_prompt)
-                self._chain_of_thoughts_log.append(
-                    {
-                        "step": "plan_response",
-                    }
-                )
-
-        response = super().ask(
-            query,
+        
+        entry_node = EntryThought()
+        main_query_node = QueryThought(
+            assistant=self, 
+            post_exec_prompt=POST_EXEC_PROMPT,
             model_name=model_name,
             on_data_callback=on_data_callback,
-            recurence_limit=recurence_limit,
-        )
-        self._chain_of_thoughts_log.append(
-            {
-                "step": "main_response",
-                "query": query,
-                "response": response,
-            }
-        )
-
-        self.history.clean_text(POST_EXEC_PROMPT)
-
-        validation_response = super().ask(
-            validation_prompt,
+          ) 
+        validate_node = AnswerValidateThought(
+            assistant=self, 
             model_name=model_name,
-            recurence_limit=recurence_limit,
         )
-        self._chain_of_thoughts_log.append(
-            {
-                "step": "validation_response",
-                "response": validation_response,
-            }
+        complexity_node = ComplexityThought(
+            assistant=self, 
+            model_name=model_name,
+        )
+        plan_node = PlanThought(
+            assistant=self, 
+            model_name=model_name,
+            on_data_callback=on_plan_callback,
         )
 
-        self.history.undo(2)
-        if validation_response == "NEXT":
-            return self.think(
-                "continue",
-                model_name=model_name,
-                on_data_callback=on_data_callback,
-                recurence_limit=recurence_limit,
-                prepare_plan=False,
-            )
+        entry_node.connect(main_query_node, lambda x: x["prepare_plan"] == False)
+        entry_node.connect(complexity_node, lambda x: x["prepare_plan"] == True)
+        complexity_node.connect(plan_node, lambda x: x["complexity"] == "COMPLEX")
+        complexity_node.connect(main_query_node, lambda x: x["complexity"] != "COMPLEX")
+        plan_node.connect(main_query_node)
+        main_query_node.connect(validate_node)
+        validate_node.connect(main_query_node, lambda x: x["next_node"] == "NEXT")
 
-        return response
+        output = entry_node.execute({
+            "query": query, 
+            "prepare_plan": prepare_plan, 
+        })
+
+        return output["response"]
+
 
     def on_log_stream(self, handler):
         self.emitter.on("log_stream", handler)
