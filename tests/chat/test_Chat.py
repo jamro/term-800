@@ -88,6 +88,7 @@ def test_Chat_print_exec_response_skip_duplicates(chat, assistant_mock):
             == "[dim]line1\nline2\nline1[/dim]"
         )
 
+
 def test_Chat_print_exec_response_carriage_return(chat, assistant_mock):
     with (
         patch("src.chat.Chat.Prompt.ask", side_effect=["whoami", "/bye"]),
@@ -109,7 +110,7 @@ def test_Chat_print_exec_response_carriage_return(chat, assistant_mock):
             live_instance.update.call_args_list[-1][0][0].renderable
             == "[dim]line1\nline2\nline4[/dim]"
         )
-        
+
 
 def test_Chat_print_exec_response_keep_short(chat, assistant_mock):
     with (

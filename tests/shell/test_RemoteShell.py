@@ -54,6 +54,7 @@ def test_RemoteShell_exec_fail():
         assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello\nError: Error\nExit Code: 1"
 
+
 def test_RemoteShell_exec_carriage_return():
     with patch("src.shell.RemoteShell.Connection") as mock_conn:
 
