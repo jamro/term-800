@@ -166,9 +166,10 @@ class Assistant(Conversation):
     def get_total_cost(self):
         return self.tokenPricing.get_total_cost(self.token_stats)
 
-    def connect(self, host, user):
-        if not self.shell.connect(host, user):
-            return False
+    def connect(self, host, user, passwd=None):
+        result = self.shell.connect(host, user, passwd)
+        if result != "OK":
+            return result
 
         host_info = self.shell.get_host_info()
         system_message = f"""
@@ -183,7 +184,7 @@ class Assistant(Conversation):
         """
         self.history.set_system_message(system_message)
 
-        return True
+        return "OK"
 
     def close(self):
         self.shell.close()

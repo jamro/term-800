@@ -1,5 +1,6 @@
 from fabric import Connection
 from src.shell.LogStream import LogStream
+from paramiko.ssh_exception import AuthenticationException
 import re
 
 
@@ -10,15 +11,22 @@ class RemoteShell:
         self.user = None
         self.conn = None
 
-    def connect(self, host, user):
+    def connect(self, host, user, passwd=None):
         self.host = host
         self.user = user
-        self.conn = Connection(host=host, user=user)
+        connect_kwargs = {}
+        if passwd:
+            connect_kwargs["password"] = passwd
+
+        self.conn = Connection(host=host, user=user, connect_kwargs=connect_kwargs)
+        
         try:
             self.conn.open()
-        except Exception:
-            return False
-        return True
+        except AuthenticationException:
+            return "AUTH_ERROR"
+        except Exception as e:
+            return "Error: " + str(e)
+        return "OK"
 
     def _apply_r(self, text):
         lines = text.split("\n")

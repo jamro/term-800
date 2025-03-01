@@ -55,6 +55,7 @@ def mock_remote_shell():
     mock.get_host_info.return_value = "host_info"
     mock.host = "skynet-2323.local"
     mock.user = "johnconnor"
+    mock.connect.return_value = "OK"
 
     return mock
 
@@ -194,9 +195,9 @@ def test_Assistant_connect_ok(mock_remote_shell, mock_settings):
 
 def test_Assistant_connect_fail(mock_remote_shell, mock_settings):
     with patch("src.ai.Assistant.Conversation") as conversation_mock:
-        mock_remote_shell.connect.return_value = False
+        mock_remote_shell.connect.return_value = "ERROR: Connection failed"
         assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
-        assert not assistant.connect("host5", "user3")
+        assert assistant.connect("host5", "user3") == "ERROR: Connection failed"
 
 
 def test_Assistant_close(mock_remote_shell, mock_settings):

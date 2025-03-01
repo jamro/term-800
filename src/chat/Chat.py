@@ -96,9 +96,22 @@ class Chat:
             f"[dim]Connecting to host [bold]{user}@{host}[/bold]...[/dim] ", end=""
         )
 
-        if not self.assistant.connect(host, user):
+        connect_result = self.assistant.connect(host, user)
+        if connect_result == "OK":
+            pass
+        elif connect_result == "AUTH_ERROR":
+            # ask for password
+            self.console.print("[dim]Authentication required.[/dim]")
+            while connect_result == "AUTH_ERROR":
+                passwd = Prompt.ask(
+                    Text("PASSWORD", style="bold green"), password=True
+                )
+                connect_result = self.assistant.connect(host, user, passwd)
+            self.console.print("[dim]Authorizing... [/dim] ", end="")
+              
+        else:
             self.console.print(
-                "[red][bold]Error: Connection timeout. Target unresponsive.[/bold][/red]"
+                f"[red][bold]{connect_result}[/bold][/red]"
             )
             return False
         self.console.print("[yellow]Connected![/yellow]\n")
