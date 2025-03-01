@@ -1,5 +1,6 @@
 from src.chat.Chat import Chat
 import json
+from src.ai.Conversation import Conversation
 
 
 class CmdChat(Chat):
@@ -58,18 +59,42 @@ class CmdChat(Chat):
         self.console.print("")
 
     def _handle_llm_model(self, command):
+        supported_models = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]
         if len(command) < 2:
             self.console.print(
-                f"[bold red]Missing argument: Please provide a language model name. Current model: '{self.assistant.model_name}'[/bold red]"
+                f"[yellow]Current LLM model: [bold]{self.assistant.model_name}[/bold][/yellow]"
             )
+            self.console.print("")
+            self.console.print(
+                "[yellow]To change the language model, type: [bold]/model <llm_model>[/bold][/yellow]"
+            )
+            self.console.print(
+                f"[dim]Suggested models: [bold]{', '.join(supported_models)}[/bold][/dim]"
+            )
+            self.console.print("")
             return
 
-        supported_models = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]
-
-        if command[1] not in supported_models:
-            self.console.print(
-                f"[bold red]Unsupported language model: '{command[1]}'. Supported models: {supported_models}[/bold red]"
+        try:
+            self.console.print(f"[dim]Verifying language model '{command[1]}'...[/dim]")
+            test_convo = Conversation(
+                api_key=self.assistant.api_key, model_name=command[1]
             )
+            test_convo.add_function(
+                name="verify_model",
+                description="Verify whether the model is supported",
+                logic=lambda: "Model is supported",
+                parameters={
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            )
+            test_convo.ask("verify_model")
+        except Exception as e:
+            self.console.print(
+                f"[bold red]Unsupported language model: '{command[1]}'. Suggested models: {supported_models}[/bold red]"
+            )
+            self.console.print(f"[red]{str(e)}[/red]")
             return
 
         self.settings.set("llm_model", command[1])

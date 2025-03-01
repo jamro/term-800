@@ -19,7 +19,7 @@ class RemoteShell:
             connect_kwargs["password"] = passwd
 
         self.conn = Connection(host=host, user=user, connect_kwargs=connect_kwargs)
-        
+
         try:
             self.conn.open()
         except AuthenticationException:

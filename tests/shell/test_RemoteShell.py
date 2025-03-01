@@ -9,7 +9,9 @@ def test_RemoteShell_test_connection_ok():
 
         rs = RemoteShell()
         result = rs.connect("localhost", "user")
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         mock_conn.return_value.open.assert_called_once()
 
 
@@ -19,9 +21,11 @@ def test_RemoteShell_test_connection_fail():
         rs = RemoteShell()
         mock_conn.return_value.open.side_effect = Exception("Connection failed")
         result = rs.connect("localhost", "user")
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         mock_conn.return_value.open.assert_called_once()
-        assert result == 'Error: Connection failed'
+        assert result == "Error: Connection failed"
 
 
 def test_RemoteShell_exec_ok():
@@ -34,7 +38,9 @@ def test_RemoteShell_exec_ok():
         mock_conn.return_value.run.return_value.exited = 0
         rs.connect("localhost", "user")
         result = rs.exec("echo Hello")
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         mock_conn.return_value.run.assert_called_once()
         assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello"
@@ -50,7 +56,9 @@ def test_RemoteShell_exec_fail():
         mock_conn.return_value.run.return_value.exited = 1
         rs.connect("localhost", "user")
         result = rs.exec("echo Hello")
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         mock_conn.return_value.run.assert_called_once()
         assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "Hello\nError: Error\nExit Code: 1"
@@ -66,7 +74,9 @@ def test_RemoteShell_exec_carriage_return():
         mock_conn.return_value.run.return_value.exited = 0
         rs.connect("localhost", "user")
         result = rs.exec("echo Hello")
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         mock_conn.return_value.run.assert_called_once()
         assert mock_conn.return_value.run.call_args[0][0] == "echo Hello"
         assert result == "World"
@@ -87,7 +97,9 @@ def test_RemoteShell_get_host_info():
             ),
         ]
         result = rs.get_host_info()
-        mock_conn.assert_called_once_with(host="localhost", user="user", connect_kwargs={})
+        mock_conn.assert_called_once_with(
+            host="localhost", user="user", connect_kwargs={}
+        )
         assert "uname -a" in result
 
 
@@ -106,21 +118,33 @@ def test_RemoteShell_close():
         mock_conn.return_value.close.assert_called_once()
         assert rs.conn is None
 
+
 def test_RemoteShell_connect_password():
     with patch("src.shell.RemoteShell.Connection") as mock_conn:
 
         rs = RemoteShell()
         result = rs.connect("localhost132", "user54", "password1234")
-        mock_conn.assert_called_once_with(host="localhost132", user="user54", connect_kwargs={'password': 'password1234'})
+        mock_conn.assert_called_once_with(
+            host="localhost132",
+            user="user54",
+            connect_kwargs={"password": "password1234"},
+        )
         mock_conn.return_value.open.assert_called_once()
-        assert result == 'OK'
+        assert result == "OK"
+
 
 def test_RemoteShell_connect_auth_error():
     with patch("src.shell.RemoteShell.Connection") as mock_conn:
 
         rs = RemoteShell()
-        mock_conn.return_value.open.side_effect = AuthenticationException("Authentication failed")
+        mock_conn.return_value.open.side_effect = AuthenticationException(
+            "Authentication failed"
+        )
         result = rs.connect("localhost132", "user54", "password1234")
-        mock_conn.assert_called_once_with(host="localhost132", user="user54", connect_kwargs={'password': 'password1234'})
+        mock_conn.assert_called_once_with(
+            host="localhost132",
+            user="user54",
+            connect_kwargs={"password": "password1234"},
+        )
         mock_conn.return_value.open.assert_called_once()
-        assert result == 'AUTH_ERROR'
+        assert result == "AUTH_ERROR"

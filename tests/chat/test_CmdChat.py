@@ -2,6 +2,7 @@ import pytest
 from src.chat.CmdChat import CmdChat
 from src.ai.Assistant import Assistant
 from src.ai.ConvoHistory import ConvoHistory
+from src.ai.Conversation import Conversation
 from src.Settings import Settings
 from src.shell.RemoteShell import RemoteShell
 from unittest.mock import MagicMock, patch
@@ -18,6 +19,7 @@ def mock_settings():
 @pytest.fixture
 def assistant_mock():
     mock = MagicMock(spec=Assistant)
+    mock.api_key = "test_key_123"
     mock.history = MagicMock(spec=ConvoHistory)
     mock.shell = MagicMock(spec=RemoteShell)
     mock.shell.host = "test_host_937"
@@ -82,16 +84,27 @@ def test_CmdChat_ask(chat, assistant_mock):
 
 
 def test_CmdChat_model_unknwon(chat, console_mock):
-    with patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-unknwon", "/bye"]):
+    with (
+        patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-unknwon", "/bye"]),
+        patch("src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)) as mock_convo,
+    ):
+        convo_instance = mock_convo.return_value
+        convo_instance.ask.side_effect = Exception("Error")
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
         assert "Unsupported language model" in console_dump
 
 
-def test_CmdChat_model(chat, console_mock, mock_settings):
-    with patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-4o", "/bye"]):
+def test_CmdChat_model_basic(chat, console_mock, mock_settings):
+    with (
+      patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-4o", "/bye"]),
+      patch("src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)) as mock_convo,
+    ):
+        convo_instance = mock_convo.return_value
+        convo_instance.ask.return_value = "OK"
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "Language model changed to 'gpt-4o'" in console_dump
         assert chat.assistant.model_name == "gpt-4o"
         mock_settings.set.assert_called_with("llm_model", "gpt-4o")
 
@@ -100,7 +113,7 @@ def test_CmdChat_model_missing_arg(chat, console_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["/model", "/bye"]):
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
-        assert "Missing argument" in console_dump
+        assert f"Current LLM model: [bold]{chat.assistant.model_name}[/bold]" in console_dump
 
 
 def test_CmdChat_debug(chat, console_mock):

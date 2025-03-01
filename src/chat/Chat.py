@@ -103,16 +103,12 @@ class Chat:
             # ask for password
             self.console.print("[dim]Authentication required.[/dim]")
             while connect_result == "AUTH_ERROR":
-                passwd = Prompt.ask(
-                    Text("PASSWORD", style="bold green"), password=True
-                )
+                passwd = Prompt.ask(Text("PASSWORD", style="bold green"), password=True)
                 connect_result = self.assistant.connect(host, user, passwd)
             self.console.print("[dim]Authorizing... [/dim] ", end="")
-              
+
         else:
-            self.console.print(
-                f"[red][bold]{connect_result}[/bold][/red]"
-            )
+            self.console.print(f"[red][bold]{connect_result}[/bold][/red]")
             return False
         self.console.print("[yellow]Connected![/yellow]\n")
         return True

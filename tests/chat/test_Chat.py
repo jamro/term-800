@@ -177,8 +177,12 @@ def test_Chat_store_default_host_and_user(chat, mock_settings):
         mock_settings.set.assert_any_call("host", "host3")
         mock_settings.set.assert_any_call("user", "user1")
 
+
 def test_Chat_ask_for_password(chat, console_mock, assistant_mock):
-    with patch("src.chat.Chat.Prompt.ask", side_effect=["host212", "user847", "wrong_pass", "password123"]):
+    with patch(
+        "src.chat.Chat.Prompt.ask",
+        side_effect=["host212", "user847", "wrong_pass", "password123"],
+    ):
         assistant_mock.connect.side_effect = ["AUTH_ERROR", "AUTH_ERROR", "OK"]
         chat.connect(delay=0)
         assistant_mock.connect.assert_any_call("host212", "user847")
