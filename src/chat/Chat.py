@@ -117,7 +117,12 @@ class Chat:
         self.console.print("\n")
 
         while self._is_running:
-            prompt = Prompt.ask(Text("$>", style="bold green"))
+            prompt = Prompt.ask(
+                Text(
+                    f"{self.assistant.shell.user}@{self.assistant.shell.host} $>",
+                    style="bold green",
+                )
+            )
             self._handle_prompt(prompt)
 
     def _handle_prompt(self, prompt):

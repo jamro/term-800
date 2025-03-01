@@ -5,6 +5,7 @@ from src.shell.LogStream import LogStream
 from src.Settings import Settings
 from unittest.mock import MagicMock, patch
 import json
+from src.shell.RemoteShell import RemoteShell
 
 
 @pytest.fixture
@@ -19,6 +20,10 @@ def mock_settings():
 def assistant_mock():
     mock = MagicMock(spec=Assistant)
     mock.get_total_cost.return_value = 0.1
+    mock.shell = MagicMock(spec=RemoteShell)
+    mock.shell.host = "test_host_937"
+    mock.shell.user = "test_user_243"
+    mock.model_name = "gpt-4o-mini"
     return mock
 
 

@@ -3,6 +3,7 @@ from src.chat.CmdChat import CmdChat
 from src.ai.Assistant import Assistant
 from src.ai.ConvoHistory import ConvoHistory
 from src.Settings import Settings
+from src.shell.RemoteShell import RemoteShell
 from unittest.mock import MagicMock, patch
 import json
 
@@ -18,6 +19,9 @@ def mock_settings():
 def assistant_mock():
     mock = MagicMock(spec=Assistant)
     mock.history = MagicMock(spec=ConvoHistory)
+    mock.shell = MagicMock(spec=RemoteShell)
+    mock.shell.host = "test_host_937"
+    mock.shell.user = "test_user_243"
     mock.model_name = "gpt-4o-mini"
     mock.history.get_items.return_value = [{"role": "system", "content": "Hello"}]
     mock.get_chain_of_thoughts_log.return_value = [
