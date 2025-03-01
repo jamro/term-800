@@ -21,8 +21,8 @@ class ConvoHistory:
     def append_message(self, role, content, others={}):
         self._items.append({"role": role, "content": content, **others})
 
-    def dump(self):
-        return json.dumps(self._items)
+    def dump(self, pretty=False):
+        return json.dumps(self._items, indent=4) if pretty else json.dumps(self._items)
 
     def clean_text(self, text):
         for item in self._items[1:]:
@@ -34,3 +34,8 @@ class ConvoHistory:
 
     def clear(self):
         self._items = [self._system_block]
+
+    def undo(self, n=1):
+        for _ in range(n):
+            if len(self._items) > 1:
+                self._items.pop()

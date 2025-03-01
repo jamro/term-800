@@ -35,8 +35,8 @@ def chat(console_mock, assistant_mock, mock_settings):
 def test_Chat_ask(chat, assistant_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
         chat.run()
-        assistant_mock.ask.assert_called()
-        assert assistant_mock.ask.call_args[0][0] == "Hello"
+        assistant_mock.think.assert_called()
+        assert assistant_mock.think.call_args[0][0] == "Hello"
 
 
 def test_Chat_print_exec_response(chat, assistant_mock):

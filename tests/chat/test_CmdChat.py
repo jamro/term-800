@@ -20,6 +20,9 @@ def assistant_mock():
     mock.history = MagicMock(spec=ConvoHistory)
     mock.model_name = "gpt-4o-mini"
     mock.history.get_items.return_value = [{"role": "system", "content": "Hello"}]
+    mock.get_chain_of_thoughts_log.return_value = [
+        {"step": "main_response", "query": "Hello", "response": "Hi"},
+    ]
     mock.get_total_cost.return_value = 0.1
     return mock
 
@@ -61,8 +64,8 @@ def test_CmdChat_unknown_cmd(chat, console_mock):
 def test_CmdChat_ask(chat, assistant_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["Hello", "/bye"]):
         chat.run()
-        assistant_mock.ask.assert_called()
-        assert assistant_mock.ask.call_args[0][0] == "Hello"
+        assistant_mock.think.assert_called()
+        assert assistant_mock.think.call_args[0][0] == "Hello"
 
 
 def test_CmdChat_model_unknwon(chat, console_mock):

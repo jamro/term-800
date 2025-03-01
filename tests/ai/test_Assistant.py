@@ -3,12 +3,12 @@ import json
 from unittest.mock import patch, MagicMock
 from src.ai.Assistant import Assistant
 from src.shell.RemoteShell import RemoteShell
+import copy
 
 
-@pytest.fixture
-def mock_openai_chat_stream(*args, **kwargs):
+def mock_openai_chat_stream(text):
     responses = [
-        {"choices": [MagicMock(delta=MagicMock(content="Hello", function_call=None))]},
+        {"choices": [MagicMock(delta=MagicMock(content=text, function_call=None))]},
         {"choices": [MagicMock(delta=MagicMock(content=None, function_call=None))]},
     ]
 
@@ -57,6 +57,28 @@ def mock_remote_shell():
     mock.user = "johnconnor"
 
     return mock
+
+
+def create_snapshot_messages_side_effect(mock_responses):
+    """
+    Create a side effect function that stores the messages snapshots.
+    Conversation History is passed as reference to shared object.
+    The history may be modified by other functions after call to openai.OpenAI.
+    Snapshots allow to capture the state of the messages at the time of openai.OpenAI call.
+    """
+    messages_snapshots = []
+
+    def side_effect(*args, **kwargs):
+        messages_snapshot = copy.deepcopy(kwargs.get("messages"))
+        messages_snapshots.append(messages_snapshot)
+
+        if len(messages_snapshots) > len(mock_responses):
+            raise Exception(
+                "Too many calls to openai.OpenAI. It seems that you did not provide enough mock_responses"
+            )
+        return mock_responses[len(messages_snapshots) - 1]
+
+    return side_effect, messages_snapshots
 
 
 def test_Assistant_run_command_simple(
@@ -184,20 +206,119 @@ def test_Assistant_close(mock_remote_shell, mock_settings):
         mock_remote_shell.close.assert_called_once()
 
 
-def test_ask(mock_remote_shell, mock_settings, mock_openai_chat_stream):
-    with (
-        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
-        patch("builtins.print") as mock_print,
-    ):
+def test_Assistant_think_skip_plan(mock_remote_shell, mock_settings):
+    with (patch("src.ai.Conversation.openai.OpenAI") as mock_openai,):
         mock_settings.get.side_effect = lambda key: {
             "llm_model": "gpt-4o-mini",
             "debug": "on",
         }.get(key)
-        mock_client_instance = mock_openai.return_value
-        mock_client_instance.chat.completions.create.return_value = (
-            mock_openai_chat_stream
+
+        side_effect, messages_snapshots = create_snapshot_messages_side_effect(
+            [
+                mock_openai_chat_stream("Hello"),
+                mock_openai_chat_stream("YES"),
+            ]
         )
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.side_effect = side_effect
+
         conversation = Assistant(mock_remote_shell, mock_settings, "api_key")
-        assert conversation.ask("Hello") == "Hello"
-        mock_print.assert_called_once()
-        assert "Hello" in mock_print.call_args[0][0]
+        assert conversation.think("Hello", prepare_plan=False) == "Hello"
+
+        assert len(messages_snapshots) == 2
+        # check last message in history of conversation
+        assert "Hello" in messages_snapshots[0][-1]["content"]
+        assert "Are there any next steps" in messages_snapshots[1][-1]["content"]
+
+        chain_of_thoughts_log = conversation.get_chain_of_thoughts_log()
+        assert len(chain_of_thoughts_log) == 3
+
+
+def test_Assistant_think_simple(mock_remote_shell, mock_settings):
+    with (patch("src.ai.Conversation.openai.OpenAI") as mock_openai,):
+        mock_settings.get.side_effect = lambda key: {
+            "llm_model": "gpt-4o-mini",
+            "debug": "on",
+        }.get(key)
+
+        side_effect, messages_snapshots = create_snapshot_messages_side_effect(
+            [
+                mock_openai_chat_stream("SIMPLE"),
+                mock_openai_chat_stream("Hello"),
+                mock_openai_chat_stream("YES"),
+            ]
+        )
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.side_effect = side_effect
+
+        conversation = Assistant(mock_remote_shell, mock_settings, "api_key")
+        assert conversation.think("Hello") == "Hello"
+
+        assert len(messages_snapshots) == 3
+
+        # check last message in history of conversation
+        assert "determine its complexity" in messages_snapshots[0][-1]["content"]
+        assert "Hello" in messages_snapshots[1][-1]["content"]
+        assert "Are there any next steps" in messages_snapshots[2][-1]["content"]
+
+
+def test_Assistant_think_plan(mock_remote_shell, mock_settings):
+    with (patch("src.ai.Conversation.openai.OpenAI") as mock_openai,):
+        mock_settings.get.side_effect = lambda key: {
+            "llm_model": "gpt-4o-mini",
+            "debug": "on",
+        }.get(key)
+
+        side_effect, messages_snapshots = create_snapshot_messages_side_effect(
+            [
+                mock_openai_chat_stream("COMPLEX"),
+                mock_openai_chat_stream("My Plan 6352"),
+                mock_openai_chat_stream("Hello"),
+                mock_openai_chat_stream("YES"),
+            ]
+        )
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.side_effect = side_effect
+
+        conversation = Assistant(mock_remote_shell, mock_settings, "api_key")
+        assert conversation.think("Hello") == "Hello"
+
+        assert len(messages_snapshots) == 4
+
+        # check last message in history of conversation
+        assert "determine its complexity" in messages_snapshots[0][-1]["content"]
+        assert "Prepare a plan" in messages_snapshots[1][-1]["content"]
+        assert "Hello" in messages_snapshots[2][-1]["content"]
+        assert "Are there any next steps" in messages_snapshots[3][-1]["content"]
+
+
+def test_Assistant_think_followup(mock_remote_shell, mock_settings):
+    with (patch("src.ai.Conversation.openai.OpenAI") as mock_openai,):
+        mock_settings.get.side_effect = lambda key: {
+            "llm_model": "gpt-4o-mini",
+            "debug": "on",
+        }.get(key)
+
+        side_effect, messages_snapshots = create_snapshot_messages_side_effect(
+            [
+                mock_openai_chat_stream("SIMPLE"),
+                mock_openai_chat_stream("Hello"),
+                mock_openai_chat_stream("NEXT"),
+                mock_openai_chat_stream("Hello"),
+                mock_openai_chat_stream("YES"),
+            ]
+        )
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.side_effect = side_effect
+
+        conversation = Assistant(mock_remote_shell, mock_settings, "api_key")
+        assert conversation.think("Hello") == "Hello"
+
+        assert len(messages_snapshots) == 5
+
+        # check last message in history of conversation
+        assert "determine its complexity" in messages_snapshots[0][-1]["content"]
+        assert "Hello" in messages_snapshots[1][-1]["content"]
+        assert "Are there any next steps" in messages_snapshots[2][-1]["content"]
+        assert "continue" in messages_snapshots[3][-1]["content"]
+        assert "Are there any next steps" in messages_snapshots[4][-1]["content"]

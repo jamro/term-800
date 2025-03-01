@@ -101,10 +101,13 @@ class Chat:
             self._is_running = False
             return
 
-        self.assistant.ask(
+        self.assistant.think(
             prompt,
             on_data_callback=lambda data: self.console.print(
                 f"[yellow]{data}[/yellow]", end=""
+            ),
+            on_plan_callback=lambda data: self.console.print(
+                f"[green]{data}[/green]", end=""
             ),
         )
 

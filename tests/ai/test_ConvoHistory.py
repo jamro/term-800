@@ -68,3 +68,18 @@ def test_ConvoHistory_clear():
     convo.clear()
     assert len(convo.get_items()) == 1
     assert convo.get_system_message() == "Sys73269"
+
+
+def test_Convo_undo():
+    convo = ConvoHistory()
+    convo.append_message("user", "msg1")
+    convo.append_message("user", "msg2")
+    convo.append_message("user", "msg3")
+    convo.undo(2)
+    assert len(convo.get_items()) == 2
+    assert convo.get_items()[0]["role"] == "system"
+    assert convo.get_items()[-1]["content"] == "msg1"
+
+    convo.undo()
+    assert len(convo.get_items()) == 1
+    assert convo.get_items()[0]["role"] == "system"
