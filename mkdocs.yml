@@ -5,3 +5,5 @@ theme:
   hljs_languages:
     - python
     - bash
+plugins:
+  - include-markdown
