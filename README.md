@@ -4,9 +4,9 @@
 
 **Term-800** is an AI-powered system administrator that connects to Linux servers via SSH to execute commands, retrieve system information, and automate tasks. Inspired by the T-800 from the Terminator movie, this project was created purely for fun.
 
-*Term-800 is a powerful tool, but system administration is inherently complex. Ensuring security, reliability, and scalability requires careful oversight. While Term-800 can be helpful for small projects like Raspberry Pi setups or personal development environments, it should be used with caution. You are responsible for how you use it, so always verify commands and configurations before applying them to critical systems.*
-
 ![Term-800 Screenshot](docs/screenshot.png)
+
+*Term-800 is a powerful tool, but system administration is inherently complex. Ensuring security, reliability, and scalability requires careful oversight. While Term-800 can be helpful for small projects like Raspberry Pi setups or personal development environments, it should be used with caution. You are responsible for how you use it, so always verify commands and configurations before applying them to critical systems.*
 
 ## Key Features
 
