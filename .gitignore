@@ -2,6 +2,7 @@
 .vscode
 term800_config.json
 /sandbox.py
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
