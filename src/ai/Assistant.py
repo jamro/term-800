@@ -59,7 +59,13 @@ class Assistant(Conversation):
             command_allowed = self.guardian.is_allowed(command)
             self.emitter.emit("log_stream", log_stream)
             if command_allowed:
-                output = shell.exec(command, log_stream=log_stream)
+                try:
+                    output = shell.exec(command, log_stream=log_stream)
+                except Exception as e:
+                    output = f"Error: {str(e)}"
+                    self.abort_mode = True
+                    log_stream.write(output)
+                    log_stream.done()
             else:
                 self.abort_mode = True
                 output = "Command execution was aborted by the user. Next action: Abort execution of the current operation. Do not execute further commands."
@@ -99,7 +105,7 @@ class Assistant(Conversation):
 
               OUTPUT:
               {output}
-              {POST_EXEC_PROMPT if command_allowed else "Do not execute further commands. Command execution was aborted by the user."}
+              {POST_EXEC_PROMPT if not self.abort_mode else "Do not execute further commands. Command execution was aborted by the user."}
               """
 
             return result

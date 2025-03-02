@@ -368,3 +368,26 @@ def test_Assistant_think_followup(mock_remote_shell, mock_settings):
             "'NEXT' if more information or further action is required"
             in messages_snapshots[4][-1]["content"]
         )
+
+def test_Assistant_handle_shell_exec_errors(
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
+):
+    with (
+        patch("src.ai.Assistant.Conversation") as conversation_mock,
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
+    ):
+        mock_remote_shell.exec.side_effect = Exception("Error: Something went wrong")
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.return_value = (
+            mock_openai_chat_stream_with_function
+        )
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
+        assistant.ask("Hello")
+
+        assert mock_remote_shell.exec.call_args[0][0] == "whoami"
+        chat_dump = json.dumps(
+            mock_client_instance.chat.completions.create.call_args, indent=2
+        )
+
+        assert "Error: Something went wrong" in chat_dump
+        assert "Command execution was aborted" in chat_dump
