@@ -369,6 +369,7 @@ def test_Assistant_think_followup(mock_remote_shell, mock_settings):
             in messages_snapshots[4][-1]["content"]
         )
 
+
 def test_Assistant_handle_shell_exec_errors(
     mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
 ):
