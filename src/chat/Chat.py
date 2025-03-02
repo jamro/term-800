@@ -150,16 +150,18 @@ class Chat:
         if prompt == "/bye":
             self._is_running = False
             return
-
-        self.assistant.think(
-            prompt,
-            on_data_callback=lambda data: self.console.print(
-                f"[yellow]{data}[/yellow]", end=""
-            ),
-            on_plan_callback=lambda data: self.console.print(
-                f"[green]{data}[/green]", end=""
-            ),
-        )
+        try:
+            self.assistant.think(
+                prompt,
+                on_data_callback=lambda data: self.console.print(
+                    f"[yellow]{data}[/yellow]", end=""
+                ),
+                on_plan_callback=lambda data: self.console.print(
+                    f"[green]{data}[/green]", end=""
+                ),
+            )
+        except Exception as e:
+            self.console.print(f"[red]Error: {e}[/red]")
 
         self.console.print()
 

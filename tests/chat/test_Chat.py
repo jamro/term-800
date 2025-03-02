@@ -203,3 +203,15 @@ def test_Chat_confirm_execution(chat, assistant_mock):
             assistant_mock.guardian.confirm_execution("whoami", "details-27518")
             == False
         )
+
+def test_Chat_handle_openai_errors(chat, assistant_mock, console_mock):
+    with (
+        patch("src.chat.Chat.Prompt.ask", side_effect=["Hello", "/bye"]),
+    ):
+        assistant_mock.think.side_effect = Exception("OpenAI API returned an error")
+        chat.run()
+        assistant_mock.think.assert_called()
+        assert assistant_mock.think.call_args[0][0] == "Hello"
+
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "OpenAI API returned an error" in console_dump
