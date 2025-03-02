@@ -4,9 +4,11 @@
 
 **Term-800** is an AI-powered system administrator that connects to Linux servers via SSH to execute commands, retrieve system information, and automate tasks. Inspired by the T-800 from the Terminator movie, this project was created purely for fun.
 
-![Term-800 Screenshot](docs/screenshot.png)
+## App Preview
 
-*Term-800 is a powerful tool, but system administration is inherently complex. Ensuring security, reliability, and scalability requires careful oversight. While Term-800 can be helpful for small projects like Raspberry Pi setups or personal development environments, it should be used with caution. You are responsible for how you use it, so always verify commands and configurations before applying them to critical systems.*
+**Prompt**: *"Install NodeRed and run it as a service."*
+
+![Term-800 Screenshot](docs/demo.gif)
 
 ## Key Features
 
@@ -27,6 +29,25 @@
 - **Customizable AI Models** - Works with OpenAI LLM models (requires an API key). You can choose a compatible model you want to use.
 
 - **Cost Summarization** - Tracks and summarizes the cost of operations performed.
+
+## Sample Use Cases / Prompts
+
+Term-800 can assist in a wide range of system administration tasks, from security audits to network analysis and software installations. Below are some example prompts that demonstrate how you can leverage its capabilities:
+
+- Find and list all open network ports and which services are using them.
+- Install and configure a LAMP stack on this machine.
+- Set up an automatic system update script that runs daily.
+- What is my current public IP address?
+- Scan the local network and list all connected devices.
+- Perform a basic security audit on this machine and suggest improvements.
+- Find all users with sudo privileges and verify if they need access.
+- Check for known vulnerabilities in installed software.
+
+---
+
+**NOTE:** *Term-800 is a powerful tool, but system administration is inherently complex. Ensuring security, reliability, and scalability requires careful oversight. While Term-800 can be helpful for small projects like Raspberry Pi setups or personal development environments, it should be used with caution. You are responsible for how you use it, so always verify commands and configurations before applying them to critical systems.*
+
+---
 
 ## Usage
 
