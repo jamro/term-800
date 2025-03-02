@@ -149,3 +149,16 @@ class CmdChat(Chat):
 
         self.settings.set("guard", command[1])
         self.console.print(f"[dim]Execution guardian set to '{command[1]}'.[/dim]")
+
+        if command[1] == "off":
+            self.console.print(
+                "\n[yellow][bold]WARNING.[/bold] Execution Guard DISABLED. AI AUTHORIZED to execute ALL COMMANDS without user confirmation.[/yellow]\n"
+            )
+        elif command[1] == "on":
+            self.console.print(
+                "\n[yellow]Execution Guard ENABLED. AI will ask for user confirmation before executing ANY commands.[/yellow]\n"
+            )
+        elif command[1] == "auto":
+            self.console.print(
+                "\n[yellow]Execution Guard in AUTO mode. AI will ask for user confirmation before executing DANGEROUS commands only.[/yellow]\n"
+            )
