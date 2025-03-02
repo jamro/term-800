@@ -26,6 +26,8 @@ class CmdChat(Chat):
             self._handle_clear()
         elif command[0] == "debug":
             self._handle_debug()
+        elif command[0] == "guard":
+            self._handle_guard(command)
         else:
             self.console.print(
                 f"[bold red]Command not found: '{command}'. Type /help for available commands.[/bold red]"
@@ -50,6 +52,9 @@ class CmdChat(Chat):
         )
         self.console.print(
             "[yellow][bold]/clear[/bold]: clear the conversation history starting chat[/yellow]"
+        )
+        self.console.print(
+            "[yellow][bold]/guard <on|auto|off>[/bold]: ask user to confirm commands execution[/yellow]"
         )
         self.console.print(
             "[yellow][bold]/debug[/bold]: print raw LLM conversation history[/yellow]"
@@ -123,3 +128,24 @@ class CmdChat(Chat):
     def _handle_clear(self):
         self.assistant.history.clear()
         self.console.print("[dim]Conversation history cleared.[/dim]")
+
+    def _handle_guard(self, command):
+        if len(command) < 2:
+            self.console.print(
+                f"[yellow]Execution guardian is [bold]{self.settings.get('guard')}[/bold][/yellow]"
+            )
+            self.console.print("")
+            self.console.print(
+                "[yellow]To change the execution guardian, type: [bold]/guard <on|auto|off>[/bold][/yellow]"
+            )
+            self.console.print("")
+            return
+
+        if command[1] not in ["on", "auto", "off"]:
+            self.console.print(
+                f"[bold red]Invalid guardian mode: '{command[1]}'. Choose from: on, auto, off[/bold red]"
+            )
+            return
+
+        self.settings.set("guard", command[1])
+        self.console.print(f"[dim]Execution guardian set to '{command[1]}'.[/dim]")

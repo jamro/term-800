@@ -21,6 +21,18 @@ class Chat:
             lambda: self.console.print("[dim]Summary complete.[/dim]")
         )
 
+        self.assistant.guardian.confirm_execution = self._confirm_execution
+
+    def _confirm_execution(self, command, details):
+        # are you sure? yes no  question. by default, yes is selected
+        self.console.print("")
+        answer = Prompt.ask(
+            f"[green]Are you sure you want to execute command [bold red]{command}[/bold red]? {details}[/green]",
+            choices=["y", "n"],
+            default="y",
+        )
+        return answer == "y"
+
     def _handle_log_stream(self, log_stream):
         self.console.print()
         live = Live(Panel("...", title=log_stream.command), refresh_per_second=4)

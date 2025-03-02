@@ -1,6 +1,7 @@
 from src.ai.Conversation import Conversation
 from src.ai.TokenPricing import TokenPricing
 from src.shell.LogStream import LogStream
+from src.ai.ExecGuardian import ExecGuardian
 from src.ai.thoughts import (
     EntryThought,
     QueryThought,
@@ -43,13 +44,27 @@ class Assistant(Conversation):
         self.tokenPricing = TokenPricing()
         self.emitter = EventEmitter()
         self._chain_of_thoughts_log = []
+        self.abort_mode = False
+        self.guardian = ExecGuardian(
+            api_key=api_key,
+            settings=settings,
+            model_name=settings.get("llm_model"),
+            token_stats=self.token_stats,
+        )
 
         def run_shell_command(command):
             nonlocal self
             log_stream = LogStream(command)
             log_stream.command = command
+            command_allowed = self.guardian.is_allowed(command)
             self.emitter.emit("log_stream", log_stream)
-            output = shell.exec(command, log_stream=log_stream)
+            if command_allowed:
+                output = shell.exec(command, log_stream=log_stream)
+            else:
+                self.abort_mode = True
+                output = "Command execution was aborted by the user. Next action: Abort execution of the current operation. Do not execute further commands."
+                log_stream.write("Command execution was aborted by the user")
+                log_stream.done()
 
             if len(output) > 5000:
                 summary_convo = Conversation(
@@ -84,7 +99,7 @@ class Assistant(Conversation):
 
               OUTPUT:
               {output}
-              {POST_EXEC_PROMPT}
+              {POST_EXEC_PROMPT if command_allowed else "Do not execute further commands. Command execution was aborted by the user."}
               """
 
             return result
@@ -113,7 +128,7 @@ class Assistant(Conversation):
         on_plan_callback=None,
         prepare_plan=True,
     ):
-
+        self.abort_mode = False
         entry_node = EntryThought()
         main_query_node = QueryThought(
             assistant=self,
@@ -140,8 +155,10 @@ class Assistant(Conversation):
         complexity_node.connect(plan_node, lambda x: x["complexity"] == "COMPLEX")
         complexity_node.connect(main_query_node, lambda x: x["complexity"] != "COMPLEX")
         plan_node.connect(main_query_node)
-        main_query_node.connect(validate_node)
-        validate_node.connect(main_query_node, lambda x: x["next_node"] == "NEXT")
+        main_query_node.connect(validate_node, lambda x: not self.abort_mode)
+        validate_node.connect(
+            main_query_node, lambda x: x["next_node"] == "NEXT" and not self.abort_mode
+        )
 
         output = entry_node.execute(
             {
@@ -151,6 +168,7 @@ class Assistant(Conversation):
         )
 
         self._chain_of_thoughts_log = entry_node.log
+        self.abort_mode = False
 
         return output["response"]
 

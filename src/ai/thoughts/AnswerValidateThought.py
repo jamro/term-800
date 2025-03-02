@@ -12,12 +12,11 @@ class AnswerValidateThought(ThoughtNode):
         query = input["query"]
         validation_prompt = f"""
           The main prompt was: '{query}'.
-          Review the information above and determine whether the task was successfully completed or answered.
-          Are there any next steps or follow-up actions required?
+          Review the information above and determine whether the task require any further steps or actions.
 
           Answer with:
-            -	'DONE' if the task was successfully completed or fully answered.
-            -	'NEXT' if more information or further action is required.
+            -	'DONE' if the task was successfully completed, fully answered, failed without further steps.
+            -	'NEXT' if more information or further action is required and operation was NOT aborted by user.
 
           Do not provide any additional information.
         """

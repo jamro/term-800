@@ -5,6 +5,7 @@ from src.ai.ConvoHistory import ConvoHistory
 from src.ai.Conversation import Conversation
 from src.Settings import Settings
 from src.shell.RemoteShell import RemoteShell
+from src.ai.ExecGuardian import ExecGuardian
 from unittest.mock import MagicMock, patch
 import json
 
@@ -12,7 +13,10 @@ import json
 @pytest.fixture
 def mock_settings():
     mock = MagicMock(spec=Settings)
-    mock.get.side_effect = lambda key: {"llm_model": "gpt-4o-mini"}.get(key)
+    mock.get.side_effect = lambda key: {
+        "llm_model": "gpt-4o-mini",
+        "guard": "auto",
+    }.get(key)
     return mock
 
 
@@ -25,6 +29,7 @@ def assistant_mock():
     mock.shell.host = "test_host_937"
     mock.shell.user = "test_user_243"
     mock.model_name = "gpt-4o-mini"
+    mock.guardian = MagicMock(spec=ExecGuardian)
     mock.history.get_items.return_value = [{"role": "system", "content": "Hello"}]
     mock.get_chain_of_thoughts_log.return_value = [
         {
@@ -86,7 +91,9 @@ def test_CmdChat_ask(chat, assistant_mock):
 def test_CmdChat_model_unknwon(chat, console_mock):
     with (
         patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-unknwon", "/bye"]),
-        patch("src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)) as mock_convo,
+        patch(
+            "src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)
+        ) as mock_convo,
     ):
         convo_instance = mock_convo.return_value
         convo_instance.ask.side_effect = Exception("Error")
@@ -97,8 +104,10 @@ def test_CmdChat_model_unknwon(chat, console_mock):
 
 def test_CmdChat_model_basic(chat, console_mock, mock_settings):
     with (
-      patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-4o", "/bye"]),
-      patch("src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)) as mock_convo,
+        patch("src.chat.Chat.Prompt.ask", side_effect=["/model gpt-4o", "/bye"]),
+        patch(
+            "src.chat.CmdChat.Conversation", return_value=MagicMock(spec=Conversation)
+        ) as mock_convo,
     ):
         convo_instance = mock_convo.return_value
         convo_instance.ask.return_value = "OK"
@@ -113,7 +122,10 @@ def test_CmdChat_model_missing_arg(chat, console_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["/model", "/bye"]):
         chat.run()
         console_dump = json.dumps([call for call in console_mock.print.call_args_list])
-        assert f"Current LLM model: [bold]{chat.assistant.model_name}[/bold]" in console_dump
+        assert (
+            f"Current LLM model: [bold]{chat.assistant.model_name}[/bold]"
+            in console_dump
+        )
 
 
 def test_CmdChat_debug(chat, console_mock):
@@ -127,3 +139,35 @@ def test_CmdChat_clear(chat, console_mock):
     with patch("src.chat.Chat.Prompt.ask", side_effect=["/clear", "/bye"]):
         chat.run()
         chat.assistant.history.clear.assert_called()
+
+
+def test_CmdChat_guard_status(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/guard", "/bye"]):
+        chat.run()
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        "Execution guardian is [bold]auto[/bold]" in console_dump
+
+
+def test_CmdChat_guard_set_off(chat, mock_settings):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/guard off", "/bye"]):
+        chat.run()
+        mock_settings.set.assert_called_with("guard", "off")
+
+
+def test_CmdChat_guard_set_on(chat, mock_settings):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/guard on", "/bye"]):
+        chat.run()
+        mock_settings.set.assert_called_with("guard", "on")
+
+
+def test_CmdChat_guard_set_auto(chat, mock_settings):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/guard auto", "/bye"]):
+        chat.run()
+        mock_settings.set.assert_called_with("guard", "auto")
+
+
+def test_CmdChat_guard_invalid(chat, console_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["/guard invalid", "/bye"]):
+        chat.run()
+        console_dump = json.dumps([call for call in console_mock.print.call_args_list])
+        assert "Invalid guardian mode" in console_dump

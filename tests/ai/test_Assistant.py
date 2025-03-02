@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch, MagicMock
 from src.ai.Assistant import Assistant
 from src.shell.RemoteShell import RemoteShell
+from src.ai.ExecGuardian import ExecGuardian
 import copy
 
 
@@ -102,6 +103,32 @@ def test_Assistant_run_command_simple(
         )
         assert "whoami" in chat_dump
         assert "t800" in chat_dump
+
+
+def test_Assistant_run_command_not_allowed(
+    mock_openai_chat_stream_with_function, mock_remote_shell, mock_settings
+):
+    with (
+        patch("src.ai.Assistant.Conversation") as conversation_mock,
+        patch("src.ai.Conversation.openai.OpenAI") as mock_openai,
+        patch(
+            "src.ai.Assistant.ExecGuardian", return_value=MagicMock(spec=ExecGuardian)
+        ) as mock_exec_guardian,
+    ):
+        mock_client_instance = mock_openai.return_value
+        mock_client_instance.chat.completions.create.return_value = (
+            mock_openai_chat_stream_with_function
+        )
+        mock_exec_guardian_instance = mock_exec_guardian.return_value
+        mock_exec_guardian_instance.is_allowed.return_value = False
+
+        assistant = Assistant(mock_remote_shell, mock_settings, "api_key")
+        assistant.ask("Hello")
+
+        chat_dump = json.dumps(
+            mock_client_instance.chat.completions.create.call_args, indent=2
+        )
+        assert "Command execution was aborted" in chat_dump
 
 
 def test_Assistant_run_command_hooks(
@@ -229,7 +256,10 @@ def test_Assistant_think_skip_plan(mock_remote_shell, mock_settings):
         assert len(messages_snapshots) == 2
         # check last message in history of conversation
         assert "Hello" in messages_snapshots[0][-1]["content"]
-        assert "Are there any next steps" in messages_snapshots[1][-1]["content"]
+        assert (
+            "'NEXT' if more information or further action is required"
+            in messages_snapshots[1][-1]["content"]
+        )
 
         chain_of_thoughts_log = conversation.get_chain_of_thoughts_log()
         assert len(chain_of_thoughts_log) == 3
@@ -263,7 +293,10 @@ def test_Assistant_think_simple(mock_remote_shell, mock_settings):
         # check last message in history of conversation
         assert "determine its complexity" in messages_snapshots[0][-1]["content"]
         assert "Hello" in messages_snapshots[1][-1]["content"]
-        assert "Are there any next steps" in messages_snapshots[2][-1]["content"]
+        assert (
+            "'NEXT' if more information or further action is required"
+            in messages_snapshots[2][-1]["content"]
+        )
 
 
 def test_Assistant_think_plan(mock_remote_shell, mock_settings):
@@ -293,7 +326,10 @@ def test_Assistant_think_plan(mock_remote_shell, mock_settings):
         assert "determine its complexity" in messages_snapshots[0][-1]["content"]
         assert "Prepare a plan" in messages_snapshots[1][-1]["content"]
         assert "Hello" in messages_snapshots[2][-1]["content"]
-        assert "Are there any next steps" in messages_snapshots[3][-1]["content"]
+        assert (
+            "'NEXT' if more information or further action is required"
+            in messages_snapshots[3][-1]["content"]
+        )
 
 
 def test_Assistant_think_followup(mock_remote_shell, mock_settings):
@@ -323,6 +359,12 @@ def test_Assistant_think_followup(mock_remote_shell, mock_settings):
         # check last message in history of conversation
         assert "determine its complexity" in messages_snapshots[0][-1]["content"]
         assert "Hello" in messages_snapshots[1][-1]["content"]
-        assert "Are there any next steps" in messages_snapshots[2][-1]["content"]
+        assert (
+            "'NEXT' if more information or further action is required"
+            in messages_snapshots[2][-1]["content"]
+        )
         assert "continue" in messages_snapshots[3][-1]["content"]
-        assert "Are there any next steps" in messages_snapshots[4][-1]["content"]
+        assert (
+            "'NEXT' if more information or further action is required"
+            in messages_snapshots[4][-1]["content"]
+        )

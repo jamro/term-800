@@ -6,6 +6,7 @@ from src.Settings import Settings
 from unittest.mock import MagicMock, patch
 import json
 from src.shell.RemoteShell import RemoteShell
+from src.ai.ExecGuardian import ExecGuardian
 
 
 @pytest.fixture
@@ -24,6 +25,8 @@ def assistant_mock():
     mock.shell.host = "test_host_937"
     mock.shell.user = "test_user_243"
     mock.model_name = "gpt-4o-mini"
+    mock.guardian = MagicMock(spec=ExecGuardian)
+    mock.guardian.confirm_execution = lambda: True
     mock.connect.return_value = "OK"
     return mock
 
@@ -189,3 +192,14 @@ def test_Chat_ask_for_password(chat, console_mock, assistant_mock):
         assistant_mock.connect.assert_any_call("host212", "user847", "wrong_pass")
         assistant_mock.connect.assert_any_call("host212", "user847", "password123")
         console_mock.print.assert_called_with("[yellow]Connected![/yellow]\n")
+
+
+def test_Chat_confirm_execution(chat, assistant_mock):
+    with patch("src.chat.Chat.Prompt.ask", side_effect=["y", "n"]):
+        assert (
+            assistant_mock.guardian.confirm_execution("whoami", "details-27518") == True
+        )
+        assert (
+            assistant_mock.guardian.confirm_execution("whoami", "details-27518")
+            == False
+        )
